@@ -1,0 +1,48 @@
+{
+  "claude-plus": [
+    "Outfit"
+  ],
+  "light-green": [
+    "Inter",
+    "JetBrains Mono"
+  ],
+  "zen-inspired-theme": [
+    "Inter",
+    "JetBrains Mono",
+    "Playfair Display"
+  ],
+  "astrovista": [
+    "Fira Code",
+    "Merriweather",
+    "Outfit"
+  ],
+  "tiesen": [
+    "Noto Serif Georgian"
+  ],
+  "designbyte": [
+    "IBM Plex Mono",
+    "Lora",
+    "Plus Jakarta Sans"
+  ],
+  "qrafthive": [
+    "JetBrains Mono",
+    "Merriweather",
+    "Outfit"
+  ],
+  "mx-brutalist": [
+    "Lora",
+    "Montserrat",
+    "Space Mono"
+  ],
+  "sage-green": [
+    "IBM Plex Mono",
+    "Lora",
+    "Plus Jakarta Sans"
+  ],
+  "apple-liquid-glass": [
+    "Inter",
+    "JetBrains Mono",
+    "SFMono-Regular",
+    "Segoe UI"
+  ]
+}

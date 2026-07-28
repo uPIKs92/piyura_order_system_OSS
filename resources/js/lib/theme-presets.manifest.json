@@ -1,0 +1,12 @@
+[
+  { "slug": "claude-plus", "id": "cmdght103000n04lh3e2ae93r", "label": "Claude +" },
+  { "slug": "light-green", "id": "cmlhfpjhw000004l4f4ax3m7z", "label": "Light Green" },
+  { "slug": "zen-inspired-theme", "id": "cmlm03etv000204lh15608kec", "label": "Zen Inspired" },
+  { "slug": "astrovista", "id": "cmlk6zefr000004lbe9jygsqc", "label": "AstroVista" },
+  { "slug": "tiesen", "id": "cmie97f2b000704l27r9g1p11", "label": "Tiesen" },
+  { "slug": "designbyte", "id": "cmcup07dt000104l4hj4eferh", "label": "Designbyte" },
+  { "slug": "qrafthive", "id": "cmjgilzlg000404ju2wgs7uj9", "label": "Qrafthive" },
+  { "slug": "mx-brutalist", "id": "cmllfu8oc000004l1a0tidj2g", "label": "MX-Brutalist" },
+  { "slug": "sage-green", "id": "cmlf6yp47000104ld4ijt51m7", "label": "Sage Green" },
+  { "slug": "apple-liquid-glass", "id": "cmr2flrsp000304ih46yj4y1b", "label": "Apple Liquid Glass" }
+]
