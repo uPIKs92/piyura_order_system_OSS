@@ -56,4 +56,41 @@ class InventoryReceiptTest extends TestCase
         $receiptId = $response->json('id');
         $this->assertNotNull(StockReceipt::find($receiptId));
     }
+
+    public function test_receive_retries_when_receipt_number_collides(): void
+    {
+        $owner = User::factory()->owner()->create();
+        $token = $owner->createToken('test')->plainTextToken;
+
+        $product = Product::factory()->create();
+        $unit = $product->units()->first();
+
+        // generateReceiptNo() reads the latest-id row with today's prefix, so
+        // -003 at the higher id makes it propose -004, which already exists at
+        // the lower id — forcing the duplicate-key retry path.
+        $today = now()->format('Ymd');
+        StockReceipt::create([
+            'tenant_id' => $owner->tenant_id,
+            'receipt_no' => "RCV-{$today}-004",
+            'received_at' => now(),
+            'created_by' => $owner->id,
+        ]);
+        StockReceipt::create([
+            'tenant_id' => $owner->tenant_id,
+            'receipt_no' => "RCV-{$today}-003",
+            'received_at' => now(),
+            'created_by' => $owner->id,
+        ]);
+
+        $this->withToken($token)
+            ->postJson('/api/inventory/receipts', [
+                'items' => [
+                    ['product_unit_id' => $unit->id, 'quantity' => 5],
+                ],
+            ])
+            ->assertCreated()
+            ->assertJsonPath('receipt_no', "RCV-{$today}-005");
+
+        $this->assertDatabaseHas('stock_receipts', ['receipt_no' => "RCV-{$today}-005"]);
+    }
 }

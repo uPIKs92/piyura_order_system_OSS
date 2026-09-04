@@ -2,8 +2,11 @@
 
 namespace Tests\Feature;
 
+use App\Models\Tenant;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Hash;
 use Tests\TestCase;
 
 class UserManagementTest extends TestCase
@@ -27,7 +30,7 @@ class UserManagementTest extends TestCase
         $response = $this->withToken($this->token)->getJson('/api/users');
 
         $response->assertOk();
-        $this->assertCount(4, $response->json()); // owner + 3 staff
+        $this->assertCount(4, $response->json('data')); // owner + 3 staff
     }
 
     public function test_owner_can_create_staff_user(): void
@@ -73,5 +76,122 @@ class UserManagementTest extends TestCase
             'name' => 'Test', 'email' => 'test@example.com', 'password' => 'password',
         ])->assertForbidden();
         $this->withToken($staffToken)->deleteJson('/api/users/' . $staff->id)->assertForbidden();
+    }
+
+    private function createSessionRow(User $user, string $id): void
+    {
+        DB::table('sessions')->insert([
+            'id' => $id,
+            'user_id' => $user->id,
+            'ip_address' => '127.0.0.1',
+            'user_agent' => 'test',
+            'payload' => base64_encode(serialize([])),
+            'last_activity' => now()->timestamp,
+        ]);
+    }
+
+    public function test_password_change_invalidates_target_user_sessions(): void
+    {
+        $staff = User::factory()->create();
+        $this->createSessionRow($staff, 'sess-password-change');
+
+        $this->withToken($this->token)
+            ->putJson('/api/users/' . $staff->id, ['password' => 'newpassword123'])
+            ->assertOk();
+
+        $this->assertTrue(Hash::check('newpassword123', $staff->fresh()->password));
+        $this->assertSame(0, DB::table('sessions')->where('user_id', $staff->id)->count());
+    }
+
+    public function test_deactivating_user_invalidates_their_sessions(): void
+    {
+        $staff = User::factory()->create();
+        $this->createSessionRow($staff, 'sess-deactivate');
+
+        $this->withToken($this->token)
+            ->putJson('/api/users/' . $staff->id, ['is_active' => false])
+            ->assertOk();
+
+        $this->assertSame(0, DB::table('sessions')->where('user_id', $staff->id)->count());
+    }
+
+    public function test_name_change_keeps_target_user_sessions(): void
+    {
+        $staff = User::factory()->create();
+        $this->createSessionRow($staff, 'sess-name-change');
+
+        $this->withToken($this->token)
+            ->putJson('/api/users/' . $staff->id, ['name' => 'Renamed'])
+            ->assertOk();
+
+        $this->assertSame(1, DB::table('sessions')->where('user_id', $staff->id)->count());
+    }
+
+    public function test_owner_cannot_change_own_role_or_active_status(): void
+    {
+        $this->withToken($this->token)
+            ->putJson('/api/users/' . $this->owner->id, ['role' => 'staff'])
+            ->assertStatus(422);
+
+        $this->withToken($this->token)
+            ->putJson('/api/users/' . $this->owner->id, ['is_active' => false])
+            ->assertStatus(422);
+
+        $this->assertDatabaseHas('users', [
+            'id' => $this->owner->id,
+            'role' => 'owner',
+            'is_active' => true,
+        ]);
+    }
+
+    public function test_last_active_owner_cannot_be_demoted_or_deactivated(): void
+    {
+        $tenant = Tenant::factory()->create();
+        $inactiveOwner = User::factory()->owner()->create([
+            'tenant_id' => $tenant->id,
+            'is_active' => false,
+        ]);
+        $loneActiveOwner = User::factory()->owner()->create(['tenant_id' => $tenant->id]);
+        $inactiveOwnerToken = $inactiveOwner->createToken('test')->plainTextToken;
+
+        $this->withToken($inactiveOwnerToken)
+            ->putJson('/api/users/' . $loneActiveOwner->id, ['role' => 'staff'])
+            ->assertStatus(422);
+
+        $this->withToken($inactiveOwnerToken)
+            ->putJson('/api/users/' . $loneActiveOwner->id, ['is_active' => false])
+            ->assertStatus(422);
+
+        $this->assertDatabaseHas('users', [
+            'id' => $loneActiveOwner->id,
+            'role' => 'owner',
+            'is_active' => true,
+        ]);
+    }
+
+    public function test_owner_can_be_demoted_when_another_active_owner_exists(): void
+    {
+        $secondOwner = User::factory()->owner()->create(['tenant_id' => $this->owner->tenant_id]);
+
+        $this->withToken($this->token)
+            ->putJson('/api/users/' . $secondOwner->id, ['role' => 'staff'])
+            ->assertOk();
+
+        $this->assertDatabaseHas('users', [
+            'id' => $secondOwner->id,
+            'role' => 'staff',
+        ]);
+    }
+
+    public function test_owner_can_change_own_password_and_is_logged_out(): void
+    {
+        $this->createSessionRow($this->owner, 'sess-self-password');
+
+        $this->withToken($this->token)
+            ->putJson('/api/users/' . $this->owner->id, ['password' => 'newpassword123'])
+            ->assertOk();
+
+        $this->assertTrue(Hash::check('newpassword123', $this->owner->fresh()->password));
+        $this->assertSame(0, DB::table('sessions')->where('user_id', $this->owner->id)->count());
     }
 }

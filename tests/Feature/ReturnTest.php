@@ -49,4 +49,75 @@ class ReturnTest extends TestCase
 
         $this->assertEquals(11, $unit->fresh()->stok);
     }
+
+    public function test_return_quantity_exceeding_order_item_is_rejected(): void
+    {
+        $owner = User::factory()->owner()->create();
+        $token = $owner->createToken('test')->plainTextToken;
+        $product = Product::factory()->create();
+        $unit = $product->units()->first();
+        $unit->update(['stok' => 10, 'harga_jual' => 5000]);
+        $order = Order::factory()->create([
+            'user_id' => $owner->id,
+            'status' => OrderStatus::Selesai,
+            'grand_total' => 10000,
+        ]);
+        $item = $order->items()->create([
+            'product_id' => $product->id,
+            'product_unit_id' => $unit->id,
+            'product_name' => $product->nama,
+            'satuan' => $unit->satuan,
+            'price_snapshot' => 5000,
+            'quantity' => 2,
+            'subtotal' => 10000,
+        ]);
+
+        $this->withToken($token)
+            ->postJson("/api/orders/{$order->id}/returns", [
+                'reason' => 'Barang rusak',
+                'items' => [
+                    ['order_item_id' => $item->id, 'quantity' => 5, 'reason' => 'Cacat'],
+                ],
+            ])
+            ->assertStatus(422);
+
+        $this->assertDatabaseCount('returns', 0);
+        $this->assertDatabaseCount('return_items', 0);
+        $this->assertEquals(10, $unit->fresh()->stok);
+    }
+
+    public function test_staff_cannot_create_return(): void
+    {
+        $owner = User::factory()->owner()->create();
+        $staff = User::factory()->create();
+        $token = $staff->createToken('test')->plainTextToken;
+        $product = Product::factory()->create();
+        $unit = $product->units()->first();
+        $order = Order::factory()->create([
+            'user_id' => $owner->id,
+            'status' => OrderStatus::Selesai,
+            'grand_total' => 10000,
+        ]);
+        $item = $order->items()->create([
+            'product_id' => $product->id,
+            'product_unit_id' => $unit->id,
+            'product_name' => $product->nama,
+            'satuan' => $unit->satuan,
+            'price_snapshot' => 5000,
+            'quantity' => 2,
+            'subtotal' => 10000,
+        ]);
+
+        $this->withToken($token)
+            ->postJson("/api/orders/{$order->id}/returns", [
+                'reason' => 'Barang rusak',
+                'items' => [
+                    ['order_item_id' => $item->id, 'quantity' => 1, 'reason' => 'Cacat'],
+                ],
+            ])
+            ->assertForbidden();
+
+        $this->assertDatabaseCount('returns', 0);
+        $this->assertDatabaseCount('return_items', 0);
+    }
 }

@@ -8,9 +8,13 @@ use App\Models\User;
 
 class PaymentPolicy
 {
-    public function before(User $user): ?bool
+    public function before(User $user, string $ability): ?bool
     {
-        return $user->isOwner() ? true : null;
+        if ($user->isOwner() && $ability !== 'delete') {
+            return true;
+        }
+
+        return null;
     }
 
     public function viewAny(User $user, Order $order): bool
@@ -25,6 +29,6 @@ class PaymentPolicy
 
     public function delete(User $user, Payment $payment): bool
     {
-        return $payment->order->user_id === $user->id;
+        return $user->isOwner() && $user->tenant_id === $payment->order->tenant_id;
     }
 }

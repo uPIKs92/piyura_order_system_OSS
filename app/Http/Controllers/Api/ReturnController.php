@@ -9,6 +9,8 @@ use App\Models\Order;
 use App\Models\OrderItem;
 use App\Models\OrderReturn;
 use App\Models\ReturnItem;
+use App\Services\BatchService;
+use App\Services\OrderService;
 use App\Services\StockMovementService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -18,7 +20,10 @@ use Illuminate\Validation\ValidationException;
 
 class ReturnController extends Controller
 {
-    public function __construct(private StockMovementService $stockMovement) {}
+    public function __construct(
+        private StockMovementService $stockMovement,
+        private BatchService $batches,
+    ) {}
 
     public function store(Request $request, Order $order): JsonResponse
     {
@@ -42,7 +47,7 @@ class ReturnController extends Controller
             ]);
         }
 
-        return DB::transaction(function () use ($request, $order, $validated) {
+        $response = DB::transaction(function () use ($request, $order, $validated) {
             $refundAmount = 0;
 
             $orderReturn = OrderReturn::create([
@@ -59,7 +64,7 @@ class ReturnController extends Controller
                 ->where('order_id', $order->id)
                 ->whereIn('id', $orderItemIds)
                 ->lockForUpdate()
-                ->with('productUnit')
+                ->with(['productUnit', 'batchAllocations.productBatch'])
                 ->get()
                 ->keyBy('id');
 
@@ -90,7 +95,9 @@ class ReturnController extends Controller
                     'created_at' => now(),
                 ]);
 
-                $refundAmount += (float) $orderItem->price_snapshot * $requested;
+                // Same effective basis as reports: per-unit price net of item
+                // discount, ex-PPN (order_items.subtotal spread over quantity).
+                $refundAmount += round((float) $orderItem->subtotal * $requested / $orderItem->quantity, 2);
 
                 if ($orderItem->productUnit) {
                     $this->stockMovement->increment(
@@ -101,6 +108,26 @@ class ReturnController extends Controller
                         null,
                         $orderReturn,
                     );
+
+                    $remaining = $requested;
+
+                    $allocations = $orderItem->batchAllocations
+                        ->sortBy(fn ($allocation) => $allocation->productBatch?->expired_at?->timestamp ?? PHP_INT_MAX)
+                        ->values();
+
+                    foreach ($allocations as $allocation) {
+                        $take = min($remaining, (int) $allocation->quantity);
+                        if ($take <= 0) {
+                            break;
+                        }
+
+                        $this->batches->restore([['batch' => $allocation->productBatch, 'quantity' => $take]]);
+                        $remaining -= $take;
+                    }
+
+                    if ($remaining > 0) {
+                        $this->batches->receive($orderItem->productUnit, $remaining);
+                    }
                 }
             }
 
@@ -108,5 +135,9 @@ class ReturnController extends Controller
 
             return response()->json($orderReturn->load('items'), 201);
         });
+
+        OrderService::bumpAggregatesVersion($order->tenant_id);
+
+        return $response;
     }
 }

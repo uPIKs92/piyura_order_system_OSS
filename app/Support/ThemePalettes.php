@@ -15,16 +15,18 @@ class ThemePalettes
 
     /** @var list<string> */
     public const PRESETS = [
-        'claude-plus',
-        'light-green',
-        'zen-inspired-theme',
-        'astrovista',
-        'tiesen',
-        'designbyte',
-        'qrafthive',
-        'mx-brutalist',
-        'sage-green',
-        'apple-liquid-glass',
+        'luma-lime',
+        'sera-taupe',
+        'lyra-zinc',
+        'vega-emerald',
+        'luma-teal',
+        'luma-neutral',
+        'nova-mauve',
+        'sera-amber',
+        'luma-yellow',
+        'vega-sky',
+        'nova-violet',
+        'luma-red',
     ];
 
     /** @var list<string> */

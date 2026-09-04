@@ -34,6 +34,8 @@ class DraftController extends Controller
             return response()->json(['draft_data' => null]);
         }
 
+        $draft->update(['is_restored' => true]);
+
         return response()->json(['draft_data' => $draft->draft_data]);
     }
 

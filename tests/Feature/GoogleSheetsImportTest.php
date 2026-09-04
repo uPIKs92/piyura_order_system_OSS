@@ -74,6 +74,12 @@ class GoogleSheetsImportTest extends TestCase
             'tenant_id' => $this->owner->tenant_id,
             'nama' => 'Omega Egg',
         ]);
+
+        $this->assertDatabaseHas('product_units', [
+            'satuan' => 'pack',
+            'harga_beli' => 28000,
+            'harga_jual' => 35000,
+        ]);
     }
 
     public function test_import_requires_connection(): void

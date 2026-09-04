@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Models\Category;
+use App\Models\Expense;
 use App\Models\Order;
 use App\Models\Product;
 use App\Models\Tenant;
@@ -42,6 +43,10 @@ class TenantExporter
             'orders' => Order::query()
                 ->where('tenant_id', $tenant->id)
                 ->with(['items', 'payments'])
+                ->get()
+                ->all(),
+            'expenses' => Expense::query()
+                ->where('tenant_id', $tenant->id)
                 ->get()
                 ->all(),
         ];

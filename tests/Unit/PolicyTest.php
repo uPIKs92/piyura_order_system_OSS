@@ -4,9 +4,11 @@ namespace Tests\Unit;
 
 use App\Enums\UserRole;
 use App\Models\Category;
+use App\Models\Order;
 use App\Models\Product;
 use App\Models\User;
 use App\Policies\CategoryPolicy;
+use App\Policies\OrderPolicy;
 use App\Policies\ProductPolicy;
 use App\Policies\UserPolicy;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -97,5 +99,23 @@ class PolicyTest extends TestCase
         $this->assertFalse($policy->create($staff));
         $this->assertFalse($policy->update($staff, $product));
         $this->assertFalse($policy->delete($staff, $product));
+    }
+
+    public function test_order_policy_force_delete_same_tenant_allowed(): void
+    {
+        $owner = User::factory()->owner()->make(['tenant_id' => 1]);
+        $order = Order::factory()->make(['tenant_id' => 1]);
+        $policy = app(OrderPolicy::class);
+
+        $this->assertTrue($policy->forceDelete($owner, $order));
+    }
+
+    public function test_order_policy_force_delete_cross_tenant_denied(): void
+    {
+        $ownerA = User::factory()->owner()->make(['tenant_id' => 1]);
+        $orderB = Order::factory()->make(['tenant_id' => 2]);
+        $policy = app(OrderPolicy::class);
+
+        $this->assertFalse($policy->forceDelete($ownerA, $orderB));
     }
 }

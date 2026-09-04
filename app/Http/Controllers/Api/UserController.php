@@ -7,6 +7,7 @@ use App\Http\Controllers\Controller;
 use App\Models\User;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\Rule;
 
@@ -17,10 +18,17 @@ class UserController extends Controller
         $this->authorizeResource(User::class);
     }
 
-    public function index(): JsonResponse
+    public function index(Request $request): JsonResponse
     {
+        $validated = $request->validate([
+            'page' => 'sometimes|integer|min:1',
+            'per_page' => 'sometimes|integer|min:1|max:100',
+        ]);
+
         return response()->json(
-            User::where('tenant_id', auth()->user()->tenant_id)->get()
+            User::where('tenant_id', auth()->user()->tenant_id)
+                ->orderBy('id')
+                ->paginate((int) ($validated['per_page'] ?? 20))
         );
     }
 
@@ -69,11 +77,42 @@ class UserController extends Controller
             'is_active' => ['sometimes', 'boolean'],
         ]);
 
+        if ($user->id === $request->user()->id
+            && (isset($validated['role']) || isset($validated['is_active']))) {
+            return response()->json([
+                'message' => 'You cannot change your own role or active status.',
+            ], 422);
+        }
+
+        $removesActiveOwner = $user->isOwner()
+            && $user->is_active
+            && ((isset($validated['role']) && $validated['role'] !== UserRole::Owner->value)
+                || (isset($validated['is_active']) && ! $validated['is_active']));
+
+        if ($removesActiveOwner) {
+            $activeOwners = User::query()
+                ->where('tenant_id', $user->tenant_id)
+                ->where('role', UserRole::Owner->value)
+                ->where('is_active', true)
+                ->count();
+
+            if ($activeOwners <= 1) {
+                return response()->json([
+                    'message' => 'Cannot demote or deactivate the last active owner.',
+                ], 422);
+            }
+        }
+
         if (isset($validated['password'])) {
             $validated['password'] = Hash::make($validated['password']);
         }
 
         $user->update($validated);
+
+        if (isset($validated['password'])
+            || (isset($validated['is_active']) && ! $validated['is_active'])) {
+            DB::table('sessions')->where('user_id', $user->id)->delete();
+        }
 
         return response()->json($user);
     }

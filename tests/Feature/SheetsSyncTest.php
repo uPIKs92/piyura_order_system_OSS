@@ -221,6 +221,85 @@ class SheetsSyncTest extends TestCase
             ->assertForbidden();
     }
 
+    public function test_second_dispatch_claims_nothing_after_first_sends(): void
+    {
+        // Simulates the scheduled runner and a manual owner dispatch racing:
+        // the second run must find nothing pending and append nothing.
+        $mock = Mockery::mock(GoogleSheetsService::class);
+        $mock->shouldReceive('isReadyForSync')->andReturn(true);
+        $mock->shouldReceive('ensureHeaderRow')->once();
+        $mock->shouldReceive('appendRow')->once();
+        $this->app->instance(GoogleSheetsService::class, $mock);
+
+        $order = Order::factory()->create(['user_id' => $this->staff->id]);
+        $service = app(SheetsSyncService::class);
+        $service->pushToOutbox($order);
+
+        $this->assertSame(1, $service->dispatchPending());
+        $this->assertSame(0, $service->dispatchPending());
+
+        $record = SheetsSyncOutbox::withoutGlobalScopes()->first();
+        $this->assertSame('sent', $record->status);
+    }
+
+    public function test_dispatch_does_not_reappend_when_identical_payload_already_sent(): void
+    {
+        // Ambiguous failure: the first attempt reached the sheet but its
+        // status update was lost, so the record was retried. The retried row
+        // carries an identical payload to the already-sent row and must be
+        // resolved as delivered without a second append.
+        $mock = Mockery::mock(GoogleSheetsService::class);
+        $mock->shouldReceive('isReadyForSync')->andReturn(true);
+        $mock->shouldReceive('ensureHeaderRow')->never();
+        $mock->shouldReceive('appendRow')->never();
+        $this->app->instance(GoogleSheetsService::class, $mock);
+
+        $order = Order::factory()->create(['user_id' => $this->staff->id]);
+        $payload = app(SheetsSyncService::class)->buildPayload($order);
+
+        SheetsSyncOutbox::withoutGlobalScopes()->create([
+            'tenant_id' => $order->tenant_id,
+            'order_id' => $order->id,
+            'idempotency_key' => 'delivered-key',
+            'payload' => $payload,
+            'status' => 'sent',
+            'sent_at' => now(),
+        ]);
+        $retried = SheetsSyncOutbox::withoutGlobalScopes()->create([
+            'tenant_id' => $order->tenant_id,
+            'order_id' => $order->id,
+            'idempotency_key' => 'retried-key',
+            'payload' => $payload,
+            'status' => 'pending',
+            'attempts' => 1,
+            'last_error' => 'timeout',
+        ]);
+
+        $sent = app(SheetsSyncService::class)->dispatchPending();
+
+        $this->assertSame(1, $sent);
+        $retried->refresh();
+        $this->assertSame('sent', $retried->status);
+        $this->assertNotNull($retried->sent_at);
+    }
+
+    public function test_header_row_ensured_once_per_run_regardless_of_row_count(): void
+    {
+        $mock = Mockery::mock(GoogleSheetsService::class);
+        $mock->shouldReceive('isReadyForSync')->andReturn(true);
+        $mock->shouldReceive('ensureHeaderRow')->once();
+        $mock->shouldReceive('appendRow')->times(3);
+        $this->app->instance(GoogleSheetsService::class, $mock);
+
+        $service = app(SheetsSyncService::class);
+        for ($i = 0; $i < 3; $i++) {
+            $order = Order::factory()->create(['user_id' => $this->staff->id]);
+            $service->pushToOutbox($order);
+        }
+
+        $this->assertSame(3, $service->dispatchPending());
+    }
+
     public function test_dispatch_skips_when_not_connected(): void
     {
         TenantSettings::for($this->owner->tenant_id)->set('sheets.sync_enabled', false);

@@ -43,8 +43,29 @@ class CategoryTest extends TestCase
 
         $response = $this->withToken($this->ownerToken)->getJson('/api/categories');
 
-        $response->assertOk();
-        $this->assertCount(1, $response->json());
+        $response->assertOk()
+            ->assertJsonCount(1, 'data')
+            ->assertJsonPath('data.0.nama', 'Makanan')
+            ->assertJsonStructure(['data', 'current_page', 'per_page', 'total', 'last_page']);
+    }
+
+    public function test_categories_index_is_paginated(): void
+    {
+        Category::factory()->count(22)->create();
+
+        $this->withToken($this->ownerToken)->getJson('/api/categories')
+            ->assertOk()
+            ->assertJsonCount(20, 'data')
+            ->assertJsonPath('per_page', 20)
+            ->assertJsonPath('total', 22)
+            ->assertJsonPath('last_page', 2);
+
+        $this->withToken($this->ownerToken)->getJson('/api/categories?page=2')
+            ->assertOk()
+            ->assertJsonCount(2, 'data');
+
+        $this->withToken($this->ownerToken)->getJson('/api/categories?per_page=101')
+            ->assertStatus(422);
     }
 
     public function test_staff_can_view_categories(): void
@@ -77,5 +98,17 @@ class CategoryTest extends TestCase
 
         $this->withToken($this->ownerToken)->deleteJson('/api/categories/' . $category->id)->assertOk();
         $this->assertSoftDeleted($category);
+    }
+
+    public function test_deleting_category_detaches_products_instead_of_deleting_them(): void
+    {
+        $category = Category::factory()->create();
+        $product = Product::factory()->create(['category_id' => $category->id]);
+
+        $this->withToken($this->ownerToken)->deleteJson('/api/categories/' . $category->id)->assertOk();
+
+        $this->assertSoftDeleted($category);
+        $this->assertNotSoftDeleted($product);
+        $this->assertDatabaseHas('products', ['id' => $product->id, 'category_id' => null]);
     }
 }

@@ -39,6 +39,7 @@ return Application::configure(basePath: dirname(__DIR__))
             'tenant' => \App\Http\Middleware\SetCurrentTenant::class,
             'tenant.active' => \App\Http\Middleware\EnsureTenantActive::class,
             'n8n.backup' => VerifyN8nBackupSecret::class,
+            'mayar.webhook' => \App\Http\Middleware\VerifyMayarWebhookIp::class,
         ]);
 
         $middleware->preventRequestsDuringMaintenance(except: [

@@ -20,10 +20,12 @@ class Order extends Model
     protected $fillable = [
         'tenant_id', 'user_id', 'invoice_no', 'status', 'customer_name', 'customer_phone',
         'customer_address', 'order_date', 'subtotal', 'discount_total',
-        'ppn_percentage', 'ppn_amount', 'grand_total', 'total_paid', 'notes', 'version',
+        'ppn_percentage', 'ppn_amount', 'grand_total', 'total_paid', 'change_due', 'notes', 'version',
+        'mayar_qr_url', 'mayar_amount',
+        'delivery_method', 'delivery_fee', 'delivery_distance_km',
     ];
 
-    protected $appends = ['payment_status', 'remaining_amount'];
+    protected $appends = ['payment_status', 'remaining_amount', 'change_amount'];
 
     protected function casts(): array
     {
@@ -36,7 +38,11 @@ class Order extends Model
             'ppn_amount' => 'decimal:2',
             'grand_total' => 'decimal:2',
             'total_paid' => 'decimal:2',
+            'change_due' => 'decimal:2',
             'version' => 'integer',
+            'mayar_amount' => 'decimal:2',
+            'delivery_fee' => 'decimal:2',
+            'delivery_distance_km' => 'decimal:2',
         ];
     }
 
@@ -77,7 +83,10 @@ class Order extends Model
 
     public function syncTotalPaid(): void
     {
-        $this->update(['total_paid' => $this->payments()->sum('amount')]);
+        $this->update([
+            'total_paid' => $this->payments()->sum('amount'),
+            'change_due' => $this->payments()->sum('change_amount'),
+        ]);
     }
 
     public function getPaymentStatusAttribute(): string
@@ -88,6 +97,11 @@ class Order extends Model
     public function getRemainingAmountAttribute(): float
     {
         return max(0, (float) $this->grand_total - (float) $this->total_paid);
+    }
+
+    public function getChangeAmountAttribute(): float
+    {
+        return (float) ($this->change_due ?? 0);
     }
 
     public function paymentStatus(): string

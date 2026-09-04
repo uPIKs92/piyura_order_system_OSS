@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Spatie\Activitylog\Models\Concerns\LogsActivity;
 use Spatie\Activitylog\Support\LogOptions;
@@ -15,7 +16,7 @@ class OrderItem extends Model
     use HasFactory, LogsActivity, SoftDeletes;
 
     protected $fillable = [
-        'order_id', 'product_id', 'product_unit_id', 'product_name', 'satuan', 'price_snapshot',
+        'order_id', 'product_id', 'product_unit_id', 'product_name', 'satuan', 'price_snapshot', 'cost_snapshot',
         'quantity', 'discount_type', 'discount_value', 'subtotal',
     ];
 
@@ -23,6 +24,7 @@ class OrderItem extends Model
     {
         return [
             'price_snapshot' => 'decimal:2',
+            'cost_snapshot' => 'decimal:2',
             'discount_value' => 'decimal:2',
             'subtotal' => 'decimal:2',
             'quantity' => 'integer',
@@ -47,5 +49,10 @@ class OrderItem extends Model
     public function productUnit(): BelongsTo
     {
         return $this->belongsTo(ProductUnit::class);
+    }
+
+    public function batchAllocations(): HasMany
+    {
+        return $this->hasMany(OrderItemBatch::class);
     }
 }

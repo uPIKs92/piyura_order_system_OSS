@@ -6,6 +6,7 @@ use App\Models\Order;
 use App\Models\Product;
 use App\Models\User;
 use App\Services\ImportTemplateService;
+use App\Services\OrdersImportService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use PhpOffice\PhpSpreadsheet\Spreadsheet;
 use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
@@ -37,6 +38,7 @@ class SheetsLegacyImportTest extends TestCase
         $this->assertDatabaseHas('product_units', [
             'satuan' => 'krat',
             'harga_jual' => 90000,
+            'harga_beli' => 80000,
         ]);
 
         $this->assertEquals(1, Order::count());
@@ -67,6 +69,71 @@ class SheetsLegacyImportTest extends TestCase
         $this->assertNotNull($order);
         $this->assertEquals((float) $order->grand_total, (float) $order->total_paid);
         $this->assertEquals(90000, (float) $order->subtotal);
+    }
+
+    public function test_imports_indonesian_number_format_and_harga_beli_header(): void
+    {
+        $result = app(OrdersImportService::class)->importProductsRows([
+            [
+                'Product Name' => 'Dried Mango',
+                'Unit' => 'ori',
+                'Harga Beli' => '80.000',
+                'Selling Price' => '90.000',
+            ],
+        ], $this->owner->tenant_id);
+
+        $this->assertSame(1, $result['success']);
+        $this->assertDatabaseHas('product_units', [
+            'satuan' => 'ori',
+            'harga_beli' => 80000,
+            'harga_jual' => 90000,
+        ]);
+    }
+
+    public function test_imports_cancelled_order_when_sheet_status_is_batal(): void
+    {
+        $product = Product::factory()->create(['nama' => 'Omega Egg Negeri']);
+        $product->units()->first()->update(['satuan' => 'krat', 'harga_jual' => 90000]);
+
+        $result = app(OrdersImportService::class)->importOrdersRows([
+            [
+                'Date' => '6/12/2026 7:00:00',
+                'Customer Name' => 'Kevin',
+                'Product Name' => 'Omega Egg Negeri',
+                'Qty' => 1,
+                'Unit' => 'krat',
+                'Status' => 'Batal',
+                'Delivery' => 'Batal',
+            ],
+        ], $this->owner);
+
+        $this->assertSame(1, $result['success']);
+        $order = Order::first();
+        $this->assertSame('cancelled', $order->status->value);
+        $this->assertSame(0.0, (float) $order->total_paid);
+    }
+
+    public function test_delivered_but_unpaid_order_imports_as_dikirim(): void
+    {
+        $product = Product::factory()->create(['nama' => 'Omega Egg Negeri']);
+        $product->units()->first()->update(['satuan' => 'krat', 'harga_jual' => 90000]);
+
+        $result = app(OrdersImportService::class)->importOrdersRows([
+            [
+                'Date' => '7/24/2026 7:00:00',
+                'Customer Name' => 'Joel',
+                'Product Name' => 'Omega Egg Negeri',
+                'Qty' => 1,
+                'Unit' => 'krat',
+                'Status' => 'Pending',
+                'Delivery' => 'Selesai',
+            ],
+        ], $this->owner);
+
+        $this->assertSame(1, $result['success']);
+        $order = Order::first();
+        $this->assertSame('dikirim', $order->status->value);
+        $this->assertSame(0.0, (float) $order->total_paid);
     }
 
     public function test_template_service_generates_two_tab_workbook(): void

@@ -9,6 +9,7 @@ use App\Support\LoginTenant;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Password;
 use Illuminate\Support\Str;
@@ -25,12 +26,12 @@ class AuthController extends Controller
             'device_name' => 'nullable|string|max:255',
         ]);
 
-        $key = 'login_attempts:'.$request->ip().':'.$request->email;
+        $key = 'login_attempts:'.$request->ip().':'.$request->email.':'.intdiv(now()->timestamp, 300);
         $attempts = cache()->get($key, 0);
 
         if ($attempts >= 5) {
             throw ValidationException::withMessages([
-                'email' => ['Too many login attempts. Please try again in 1 minute.'],
+                'email' => ['Too many login attempts. Please try again in 5 minutes.'],
             ]);
         }
 
@@ -45,7 +46,7 @@ class AuthController extends Controller
         $user = $userQuery->with('tenant')->first();
 
         if (! $user || ! Hash::check($request->password, $user->password)) {
-            cache()->put($key, $attempts + 1, now()->addMinute());
+            cache()->put($key, $attempts + 1, now()->addMinutes(10));
             throw ValidationException::withMessages([
                 'email' => ['The provided credentials are incorrect.'],
             ]);
@@ -158,6 +159,7 @@ class AuthController extends Controller
 
         Password::broker()->deleteToken($user);
         $user->tokens()->delete();
+        DB::table('sessions')->where('user_id', $user->id)->delete();
 
         return response()->json(['message' => 'Your password has been reset.']);
     }

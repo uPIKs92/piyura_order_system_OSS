@@ -33,6 +33,11 @@ class ProductUnit extends Model
         return $this->stok <= $this->min_stok;
     }
 
+    public function batches(): HasMany
+    {
+        return $this->hasMany(ProductBatch::class);
+    }
+
     public function stockMovements(): HasMany
     {
         return $this->hasMany(StockMovement::class);

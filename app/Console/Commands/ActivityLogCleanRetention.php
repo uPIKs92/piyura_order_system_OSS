@@ -15,13 +15,27 @@ class ActivityLogCleanRetention extends Command
     {
         $cutoff = now()->subDays((int) $this->option('days'));
 
-        $deleted = Activity::query()
-            ->where('created_at', '<', $cutoff)
-            ->where(function ($query) {
-                $query->whereNull('properties->important')
-                    ->orWhere('properties->important', '!=', true);
-            })
-            ->delete();
+        // Delete in bounded batches (by id subquery) so the first run on a
+        // large table does not hold a long lock; same retention semantics.
+        $deleted = 0;
+        $batchSize = 1000;
+
+        do {
+            $ids = Activity::query()
+                ->where('created_at', '<', $cutoff)
+                ->where(function ($query) {
+                    $query->whereNull('properties->important')
+                        ->orWhere('properties->important', '!=', true);
+                })
+                ->limit($batchSize)
+                ->pluck('id');
+
+            if ($ids->isEmpty()) {
+                break;
+            }
+
+            $deleted += Activity::query()->whereIn('id', $ids)->delete();
+        } while ($ids->count() >= $batchSize);
 
         $this->info("Deleted {$deleted} activity log records older than {$cutoff->toDateString()}.");
 

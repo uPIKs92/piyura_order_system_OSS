@@ -19,6 +19,14 @@
     </source>
     <php>
         <env name="APP_ENV" value="testing"/>
+        <!-- Test requests are stateless token API calls, not SPA requests.
+             Setting APP_URL to localhost + emptying SANCTUM_STATEFUL_DOMAINS
+             ensures the custom EnsureFrontendRequestsAreStateful middleware
+             does NOT treat test Host headers as "stateful", which would force
+             CSRF on every /api/* POST/PUT/DELETE (419). Do NOT clear
+             TENANT_BASE_DOMAIN — tenant-resolver/branding tests need it. -->
+        <env name="APP_URL" value="http://localhost"/>
+        <env name="SANCTUM_STATEFUL_DOMAINS" value=""/>
         <env name="APP_MAINTENANCE_DRIVER" value="file"/>
         <env name="BCRYPT_ROUNDS" value="4"/>
         <env name="BROADCAST_CONNECTION" value="null"/>

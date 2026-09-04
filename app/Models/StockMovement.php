@@ -15,7 +15,7 @@ class StockMovement extends Model
     public $timestamps = false;
 
     protected $fillable = [
-        'tenant_id', 'product_unit_id', 'type', 'quantity_delta',
+        'tenant_id', 'product_unit_id', 'product_batch_id', 'type', 'quantity_delta',
         'quantity_before', 'quantity_after', 'reference_type', 'reference_id',
         'notes', 'created_by', 'created_at',
     ];
@@ -34,6 +34,11 @@ class StockMovement extends Model
     public function productUnit(): BelongsTo
     {
         return $this->belongsTo(ProductUnit::class);
+    }
+
+    public function productBatch(): BelongsTo
+    {
+        return $this->belongsTo(ProductBatch::class);
     }
 
     public function creator(): BelongsTo

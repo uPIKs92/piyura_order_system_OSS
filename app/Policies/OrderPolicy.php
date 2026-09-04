@@ -7,15 +7,6 @@ use App\Models\User;
 
 class OrderPolicy
 {
-    public function before(User $user, string $ability): ?bool
-    {
-        if ($user->isOwner() && $ability !== 'forceDelete') {
-            return null;
-        }
-
-        return null;
-    }
-
     public function viewAny(User $user): bool
     {
         return true;
@@ -45,6 +36,6 @@ class OrderPolicy
 
     public function forceDelete(User $user, Order $order): bool
     {
-        return $user->isOwner();
+        return $user->isOwner() && $user->tenant_id === $order->tenant_id;
     }
 }

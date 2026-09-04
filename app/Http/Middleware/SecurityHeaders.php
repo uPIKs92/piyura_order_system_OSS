@@ -20,7 +20,11 @@ class SecurityHeaders
         $response->headers->set('X-Content-Type-Options', 'nosniff');
         $response->headers->set('X-Frame-Options', 'SAMEORIGIN');
         $response->headers->set('Referrer-Policy', 'strict-origin-when-cross-origin');
-        $response->headers->set('Permissions-Policy', 'camera=(), microphone=(), geolocation=()');
+        // geolocation=self: the delivery map picker uses the Geolocation API
+        // from the top-level document; `geolocation=()` disabled the API
+        // entirely (instant PERMISSION_DENIED, no browser prompt ever shown,
+        // manual grants ignored). Same-origin only keeps it restrictive.
+        $response->headers->set('Permissions-Policy', 'camera=(), microphone=(), geolocation=self');
 
         if ($request->isSecure()) {
             $response->headers->set(

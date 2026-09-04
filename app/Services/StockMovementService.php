@@ -19,8 +19,9 @@ class StockMovementService
         User $user,
         ?string $notes = null,
         ?Model $reference = null,
+        ?int $productBatchId = null,
     ): StockMovement {
-        return DB::transaction(function () use ($unit, $delta, $type, $user, $notes, $reference) {
+        return DB::transaction(function () use ($unit, $delta, $type, $user, $notes, $reference, $productBatchId) {
             $locked = ProductUnit::query()->whereKey($unit->id)->lockForUpdate()->firstOrFail();
             $before = (int) $locked->stok;
             $after = $before + $delta;
@@ -39,6 +40,7 @@ class StockMovementService
             return StockMovement::create([
                 'tenant_id' => $user->tenant_id,
                 'product_unit_id' => $locked->id,
+                'product_batch_id' => $productBatchId,
                 'type' => $type,
                 'quantity_delta' => $delta,
                 'quantity_before' => $before,

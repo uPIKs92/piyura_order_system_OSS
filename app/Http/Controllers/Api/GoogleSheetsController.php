@@ -11,6 +11,7 @@ use App\Support\TenantSettings;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 
 class GoogleSheetsController extends Controller
 {
@@ -45,7 +46,9 @@ class GoogleSheetsController extends Controller
 
             return redirect(rtrim((string) config('app.url'), '/').'/settings/ops?google=connected');
         } catch (\Throwable $e) {
-            return redirect($fallback.'?google=error&message='.urlencode($e->getMessage()));
+            Log::error('Google OAuth callback failed', ['error' => $e->getMessage()]);
+
+            return redirect($fallback.'?google=error&message='.urlencode('Gagal menghubungkan Google. Silakan coba lagi.'));
         }
     }
 

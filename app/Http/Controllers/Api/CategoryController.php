@@ -15,9 +15,16 @@ class CategoryController extends Controller
         $this->authorizeResource(Category::class);
     }
 
-    public function index(): JsonResponse
+    public function index(Request $request): JsonResponse
     {
-        return response()->json(Category::withCount('products')->get());
+        $validated = $request->validate([
+            'page' => 'sometimes|integer|min:1',
+            'per_page' => 'sometimes|integer|min:1|max:100',
+        ]);
+
+        return response()->json(
+            Category::withCount('products')->orderBy('id')->paginate((int) ($validated['per_page'] ?? 20))
+        );
     }
 
     public function store(Request $request): JsonResponse
@@ -70,6 +77,8 @@ class CategoryController extends Controller
 
     public function destroy(Category $category): JsonResponse
     {
+        $category->products()->update(['category_id' => null]);
+
         $category->delete();
 
         return response()->json(['message' => 'Deleted.'], 200);

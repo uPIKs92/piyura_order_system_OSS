@@ -12,12 +12,14 @@ class Payment extends Model
 {
     use LogsActivity;
 
-    protected $fillable = ['order_id', 'amount', 'metode', 'paid_at', 'notes'];
+    protected $fillable = ['order_id', 'amount', 'tendered', 'change_amount', 'metode', 'paid_at', 'notes', 'external_reference'];
 
     protected function casts(): array
     {
         return [
             'amount' => 'decimal:2',
+            'tendered' => 'decimal:2',
+            'change_amount' => 'decimal:2',
             'metode' => PaymentMethod::class,
             'paid_at' => 'datetime',
         ];

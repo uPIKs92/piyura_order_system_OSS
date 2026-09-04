@@ -26,6 +26,7 @@ class PaymentController extends Controller
 
         $validated = $request->validate([
             'amount' => 'required|numeric|min:0.01',
+            'tendered' => 'nullable|numeric|min:0',
             'metode' => 'required|in:cash,transfer,qris',
             'paid_at' => 'nullable|date',
             'notes' => 'nullable|string',
@@ -41,8 +42,7 @@ class PaymentController extends Controller
         abort_unless($payment->order_id === $order->id, 404);
         $this->authorize('delete', $payment);
 
-        $payment->delete();
-        $order->syncTotalPaid();
+        $this->paymentService->deletePayment($order, $payment);
 
         return response()->json(['message' => 'Payment deleted.']);
     }

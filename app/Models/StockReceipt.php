@@ -12,7 +12,7 @@ class StockReceipt extends Model
     use BelongsToTenant;
 
     protected $fillable = [
-        'tenant_id', 'receipt_no', 'supplier_name', 'notes', 'received_at', 'created_by',
+        'tenant_id', 'receipt_no', 'supplier_name', 'supplier_id', 'notes', 'received_at', 'created_by',
     ];
 
     protected function casts(): array
@@ -20,6 +20,11 @@ class StockReceipt extends Model
         return [
             'received_at' => 'datetime',
         ];
+    }
+
+    public function supplier(): BelongsTo
+    {
+        return $this->belongsTo(Supplier::class);
     }
 
     public function lines(): HasMany

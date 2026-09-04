@@ -35,4 +35,9 @@ return [
         ],
     ],
 
+    'mayar' => [
+        'base_url' => env('MAYAR_BASE_URL', 'https://api.mayar.id'),
+        'webhook_ip_allowlist' => env('MAYAR_WEBHOOK_IP_ALLOWLIST', ''),
+    ],
+
 ];

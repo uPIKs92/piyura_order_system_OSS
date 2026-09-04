@@ -16,8 +16,10 @@ class Product extends Model
 
     protected $fillable = [
         'tenant_id', 'category_id', 'nama', 'slug', 'sku', 'barcode',
-        'deskripsi', 'is_active',
+        'deskripsi', 'is_active', 'photo_path',
     ];
+
+    protected $appends = ['photo_url'];
 
     protected function casts(): array
     {
@@ -25,6 +27,16 @@ class Product extends Model
             'is_active' => 'boolean',
         ];
     }
+
+    public function getPhotoUrlAttribute(): ?string
+    {
+        if (! $this->photo_path) {
+            return null;
+        }
+
+        return \App\Support\SafeUrl::sanitize(\Illuminate\Support\Facades\Storage::disk('public')->url($this->photo_path));
+    }
+
 
     public function category()
     {

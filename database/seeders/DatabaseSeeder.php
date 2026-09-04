@@ -27,5 +27,15 @@ class DatabaseSeeder extends Seeder
             'password' => (string) env('SEED_OWNER_PASSWORD', 'password'),
             'tenant_id' => $tenant->id,
         ]);
+
+        /*
+         * Opt-in demo/tester tenant that fills every section (users, catalog,
+         * stock, orders, payments, returns, settings). Enable via
+         * SEED_TESTER_TENANT=1, or run standalone via
+         * `php artisan db:seed --class=TesterTenantSeeder`.
+         */
+        if (env('SEED_TESTER_TENANT')) {
+            $this->call(TesterTenantSeeder::class);
+        }
     }
 }

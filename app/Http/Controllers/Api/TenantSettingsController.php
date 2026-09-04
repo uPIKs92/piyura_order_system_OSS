@@ -3,6 +3,8 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Models\Tenant;
+use App\Support\TenantSettings;
 use App\Support\ThemePalettes;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -14,7 +16,7 @@ class TenantSettingsController extends Controller
     {
         $tenant = $request->user()->tenant;
 
-        return response()->json($tenant->toBrandingArray());
+        return response()->json($this->brandingWithOrigin($tenant));
     }
 
     public function update(Request $request): JsonResponse
@@ -30,12 +32,15 @@ class TenantSettingsController extends Controller
             'phone' => 'nullable|string|max:50',
             'email' => 'nullable|email|max:255',
             'invoice_footer_text' => 'nullable|string|max:500',
+            'latitude' => 'nullable|numeric|between:-90,90',
+            'longitude' => 'nullable|numeric|between:-180,180',
         ]);
 
         $tenant = $request->user()->tenant;
-        $tenant->update($validated);
+        $tenant->update(collect($validated)->except(['latitude', 'longitude'])->all());
+        $this->storeOriginPin($tenant, $validated);
 
-        return response()->json($tenant->fresh()->toBrandingArray());
+        return response()->json($this->brandingWithOrigin($tenant->fresh()));
     }
 
     public function updateAppearance(Request $request): JsonResponse
@@ -104,6 +109,41 @@ class TenantSettingsController extends Controller
         }
 
         return response()->json($tenant->fresh()->toBrandingArray());
+    }
+
+    /**
+     * Store-origin pin: absent keys keep the current value, explicit
+     * nulls clear it (mirrors the google-key semantics — the pair is
+     * always written or cleared together).
+     */
+    private function storeOriginPin(Tenant $tenant, array $validated): void
+    {
+        if (! array_key_exists('latitude', $validated) && ! array_key_exists('longitude', $validated)) {
+            return;
+        }
+
+        $settings = TenantSettings::for($tenant->id);
+        $lat = array_key_exists('latitude', $validated)
+            ? $validated['latitude']
+            : $settings->deliveryOriginLat();
+        $lon = array_key_exists('longitude', $validated)
+            ? $validated['longitude']
+            : $settings->deliveryOriginLon();
+
+        $settings->setDeliveryOrigin(
+            $lat === null ? null : (float) $lat,
+            $lon === null ? null : (float) $lon,
+        );
+    }
+
+    private function brandingWithOrigin(Tenant $tenant): array
+    {
+        $settings = TenantSettings::for($tenant->id);
+
+        return array_merge($tenant->toBrandingArray(), [
+            'latitude' => $settings->deliveryOriginLat(),
+            'longitude' => $settings->deliveryOriginLon(),
+        ]);
     }
 
     public function app(): JsonResponse

@@ -2,10 +2,13 @@
 
 namespace Tests\Feature;
 
+use App\Enums\OrderStatus;
 use App\Jobs\ProcessOrdersImportJob;
+use App\Models\Customer;
 use App\Models\Order;
 use App\Models\Product;
 use App\Models\User;
+use App\Services\OrdersImportService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Bus;
 use Illuminate\Support\Facades\File;
@@ -44,6 +47,11 @@ class OrdersImportTest extends TestCase
 
         $this->assertDatabaseHas('orders', ['customer_name' => 'Budi']);
         $this->assertEquals(1, Order::count());
+        $this->assertDatabaseHas('customers', [
+            'tenant_id' => $this->owner->tenant_id,
+            'name' => 'Budi',
+            'phone' => '08123',
+        ]);
     }
 
     public function test_import_reports_invalid_rows(): void
@@ -93,5 +101,105 @@ class OrdersImportTest extends TestCase
 
         $this->assertDatabaseHas('orders', ['customer_name' => 'Budi']);
         $this->assertEquals(1, Order::count());
+    }
+
+    public function test_reimport_existing_unit_updates_prices_without_resetting_stock(): void
+    {
+        $unit = $this->product->units()->first();
+        $unit->update(['stok' => 100, 'is_default' => true, 'harga_jual' => 1000, 'harga_beli' => 500]);
+
+        $result = app(OrdersImportService::class)->importProductsRows([
+            [
+                'Product Name' => 'Kopi Arabica',
+                'Unit' => 'pcs',
+                'Selling Price' => 2500,
+                'COGS' => 1500,
+            ],
+            [
+                'Product Name' => 'Kopi Arabica',
+                'Unit' => 'box',
+                'Selling Price' => 50000,
+                'COGS' => 40000,
+            ],
+        ], $this->owner->tenant_id);
+
+        $this->assertSame(2, $result['success']);
+
+        $unit = $unit->fresh();
+        $this->assertEquals(100, $unit->stok);
+        $this->assertEquals(2500, (float) $unit->harga_jual);
+        $this->assertEquals(1500, (float) $unit->harga_beli);
+        $this->assertTrue((bool) $unit->is_default);
+
+        $newUnit = $this->product->units()->where('satuan', 'box')->first();
+        $this->assertNotNull($newUnit);
+        $this->assertEquals(0, $newUnit->stok);
+        $this->assertEquals(50000, (float) $newUnit->harga_jual);
+        $this->assertFalse((bool) $newUnit->is_default);
+    }
+
+    public function test_repair_import_status_creates_status_log_and_bumps_version(): void
+    {
+        $unit = $this->product->units()->first();
+        $order = Order::factory()->create([
+            'user_id' => $this->owner->id,
+            'customer_name' => 'Budi',
+            'status' => OrderStatus::Diproses,
+            'order_date' => now()->toDateString(),
+        ]);
+        $order->items()->create([
+            'product_id' => $this->product->id,
+            'product_unit_id' => $unit->id,
+            'product_name' => 'Kopi Arabica',
+            'satuan' => $unit->satuan,
+            'price_snapshot' => 1000,
+            'quantity' => 2,
+            'subtotal' => 2000,
+        ]);
+
+        $result = app(OrdersImportService::class)->repairOrderStatusesFromRows([
+            [
+                'Date' => now()->toDateString(),
+                'Customer Name' => 'Budi',
+                'Product Name' => 'Kopi Arabica',
+                'Qty' => 2,
+                'Unit' => $unit->satuan,
+                'Status' => 'belum lunas',
+                'Delivery' => 'Dikirim',
+            ],
+        ], $this->owner);
+
+        $this->assertSame(1, $result['updated']);
+
+        $order = $order->fresh();
+        $this->assertSame(OrderStatus::Dikirim->value, $order->status->value);
+        $this->assertSame(2, $order->version);
+        $this->assertDatabaseHas('order_status_logs', [
+            'order_id' => $order->id,
+            'from_status' => 'diproses',
+            'to_status' => 'dikirim',
+            'changed_by' => $this->owner->id,
+        ]);
+    }
+
+    public function test_imported_order_rows_without_phone_do_not_sync_customer_directory(): void
+    {
+        $unit = $this->product->units()->first();
+
+        $result = app(OrdersImportService::class)->importOrdersRows([
+            [
+                'Date' => now()->toDateString(),
+                'Customer Name' => 'Budi',
+                'Product Name' => 'Kopi Arabica',
+                'Qty' => 2,
+                'Unit' => $unit->satuan,
+                'Status' => 'belum lunas',
+                'Delivery' => 'Dikirim',
+            ],
+        ], $this->owner);
+
+        $this->assertSame(1, $result['success']);
+        $this->assertDatabaseHas('orders', ['customer_name' => 'Budi']);
+        $this->assertSame(0, Customer::count());
     }
 }
