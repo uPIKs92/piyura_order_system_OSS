@@ -1,48 +1,43 @@
 {
-  "claude-plus": [
-    "Outfit"
+  "luma-lime": [
+    "Instrument+Sans:wght@400;500;600;700",
+    "Merriweather:wght@400;700"
   ],
-  "light-green": [
-    "Inter",
-    "JetBrains Mono"
+  "sera-taupe": [
+    "Noto+Sans:wght@400;500;600;700",
+    "Playfair+Display:wght@400;500;600;700"
   ],
-  "zen-inspired-theme": [
-    "Inter",
-    "JetBrains Mono",
-    "Playfair Display"
+  "lyra-zinc": [
+    "Inter:wght@400;500;600;700"
   ],
-  "astrovista": [
-    "Fira Code",
-    "Merriweather",
-    "Outfit"
+  "vega-emerald": [
+    "Public+Sans:wght@400;500;600;700",
+    "Geist:wght@100..900"
   ],
-  "tiesen": [
-    "Noto Serif Georgian"
+  "luma-teal": [
+    "Figtree:wght@400;500;600;700"
   ],
-  "designbyte": [
-    "IBM Plex Mono",
-    "Lora",
-    "Plus Jakarta Sans"
+  "luma-neutral": [
+    "Inter:wght@400;500;600;700"
   ],
-  "qrafthive": [
-    "JetBrains Mono",
-    "Merriweather",
-    "Outfit"
+  "nova-mauve": [
+    "Oxanium:wght@400;500;600;700"
   ],
-  "mx-brutalist": [
-    "Lora",
-    "Montserrat",
-    "Space Mono"
+  "sera-amber": [
+    "Playfair+Display:wght@400;500;600;700"
   ],
-  "sage-green": [
-    "IBM Plex Mono",
-    "Lora",
-    "Plus Jakarta Sans"
+  "luma-yellow": [
+    "Oxanium:wght@400;500;600;700"
   ],
-  "apple-liquid-glass": [
-    "Inter",
-    "JetBrains Mono",
-    "SFMono-Regular",
-    "Segoe UI"
+  "vega-sky": [
+    "Geist+Mono:wght@100..900",
+    "Manrope:wght@400;500;600;700"
+  ],
+  "nova-violet": [
+    "Noto+Serif:wght@400;500;600;700"
+  ],
+  "luma-red": [
+    "Geist:wght@100..900",
+    "Manrope:wght@400;500;600;700"
   ]
 }

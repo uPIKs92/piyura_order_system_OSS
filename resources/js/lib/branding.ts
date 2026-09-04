@@ -35,7 +35,7 @@ export function safeLogoUrl(url?: string | null): string | undefined {
 }
 
 const FALLBACK: AppBranding = {
-    app_name: 'Order Tracker',
+    app_name: 'Simple Order Systems',
     platform_name: 'Piyuralabs',
     show_platform_credit_on_invoice: true,
 };

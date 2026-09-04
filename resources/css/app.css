@@ -36,6 +36,10 @@
     --color-border: var(--border);
     --color-destructive: var(--destructive);
     --color-destructive-foreground: var(--destructive-foreground);
+    --color-success: var(--success);
+    --color-success-foreground: var(--success-foreground);
+    --color-warning: var(--warning);
+    --color-warning-foreground: var(--warning-foreground);
     --color-accent-foreground: var(--accent-foreground);
     --color-accent: var(--accent);
     --color-muted-foreground: var(--muted-foreground);
@@ -90,14 +94,18 @@
     --accent-foreground: oklch(0.205 0 0);
     --destructive: oklch(0.577 0.245 27.325);
     --destructive-foreground: oklch(0.985 0 0);
+    --success: oklch(0.596 0.145 163.225);
+    --success-foreground: oklch(0.985 0 0);
+    --warning: oklch(0.666 0.179 58.318);
+    --warning-foreground: oklch(0.985 0 0);
     --border: oklch(0.922 0 0);
     --input: oklch(0.922 0 0);
     --ring: oklch(0.708 0 0);
-    --chart-1: oklch(0.87 0 0);
-    --chart-2: oklch(0.556 0 0);
-    --chart-3: oklch(0.439 0 0);
-    --chart-4: oklch(0.371 0 0);
-    --chart-5: oklch(0.269 0 0);
+    --chart-1: oklch(0.596 0.145 163.225);
+    --chart-2: oklch(0.588 0.158 241.966);
+    --chart-3: oklch(0.541 0.281 293.009);
+    --chart-4: oklch(0.666 0.179 58.318);
+    --chart-5: oklch(0.586 0.253 17.585);
     --radius: 0.875rem;
     --shadow-2xs: 0 1px 2px 0 rgb(0 0 0 / 0.05);
     --shadow-xs: 0 1px 2px 0 rgb(0 0 0 / 0.05);
@@ -134,14 +142,18 @@
     --accent-foreground: oklch(0.985 0 0);
     --destructive: oklch(0.704 0.191 22.216);
     --destructive-foreground: oklch(0.985 0 0);
+    --success: oklch(0.696 0.17 162.48);
+    --success-foreground: oklch(0.985 0 0);
+    --warning: oklch(0.769 0.188 70.08);
+    --warning-foreground: oklch(0.985 0 0);
     --border: oklch(1 0 0 / 10%);
     --input: oklch(1 0 0 / 15%);
     --ring: oklch(0.556 0 0);
-    --chart-1: oklch(0.87 0 0);
-    --chart-2: oklch(0.556 0 0);
-    --chart-3: oklch(0.439 0 0);
-    --chart-4: oklch(0.371 0 0);
-    --chart-5: oklch(0.269 0 0);
+    --chart-1: oklch(0.765 0.177 163.223);
+    --chart-2: oklch(0.746 0.16 232.661);
+    --chart-3: oklch(0.702 0.183 293.541);
+    --chart-4: oklch(0.828 0.189 84.429);
+    --chart-5: oklch(0.712 0.194 13.428);
     --sidebar: oklch(0.205 0 0);
     --sidebar-foreground: oklch(0.985 0 0);
     --sidebar-primary: oklch(0.488 0.243 264.376);
@@ -214,7 +226,7 @@
     @apply border-amber-200 bg-amber-100 text-amber-800 dark:border-amber-900/50 dark:bg-amber-950 dark:text-amber-300;
   }
   .payment-paid {
-    @apply border-emerald-200 bg-emerald-100 text-emerald-800 dark:border-emerald-900/50 dark:bg-emerald-950 dark:text-emerald-300;
+    @apply border-success/25 bg-success/15 text-success;
   }
   .payment-overpaid {
     @apply border-violet-200 bg-violet-100 text-violet-800 dark:border-violet-900/50 dark:bg-violet-950 dark:text-violet-300;
@@ -222,17 +234,24 @@
   .action-edit {
     @apply bg-primary text-primary-foreground;
   }
+  .action-cancel {
+    @apply bg-warning text-warning-foreground;
+  }
   .action-delete {
     @apply bg-destructive text-white;
   }
   .action-pay {
-    @apply bg-emerald-600 text-white;
+    @apply bg-success text-success-foreground;
   }
   .app-frame {
-    @apply mx-auto w-full max-w-lg lg:max-w-4xl;
+    @apply mx-auto w-full;
     padding-left: max(1.25rem, env(safe-area-inset-left, 0px));
     padding-right: max(1.25rem, env(safe-area-inset-right, 0px));
   }
+  /* Safe-area insets for iOS notch / home indicator. Require viewport-fit=cover. */
+  .safe-top { padding-top: env(safe-area-inset-top, 0px); }
+  .safe-bottom { padding-bottom: env(safe-area-inset-bottom, 0px); }
+  .safe-pt-top { padding-top: max(0.75rem, env(safe-area-inset-top, 0px)); }
   @media (min-width: 640px) {
     .app-frame {
       padding-left: max(1.5rem, env(safe-area-inset-left, 0px));
@@ -262,28 +281,10 @@
     }
   }
 
-  /* MX-Brutalist: hard borders and offset shadows instead of soft rings */
-  :root[data-palette="mx-brutalist"] [data-slot="card"],
-  :root[data-palette="mx-brutalist"] [data-slot="alert-dialog-content"],
-  :root[data-palette="mx-brutalist"] [data-slot="sheet-content"],
-  :root[data-palette="mx-brutalist"] [data-slot="drawer-content"],
-  :root[data-palette="mx-brutalist"] [data-slot="dropdown-menu-content"],
-  :root[data-palette="mx-brutalist"] [data-slot="dropdown-menu-sub-content"],
-  :root[data-palette="mx-brutalist"] [data-slot="select-content"] {
-    @apply border-2 border-border ring-0;
-  }
-
-  :root[data-palette="mx-brutalist"] [data-slot="button"]:not([data-variant="ghost"]):not([data-variant="link"]) {
-    @apply border-2 border-border shadow-sm;
-  }
-
-  /* Landing: respect reduced motion for scroll-reveal + magnetic hover */
+  /* Landing: respect reduced motion only for infinite decorative loops.
+     Brief one-shot reveals + pointer-driven magnetic hover stay (WCAG: brief, non-repeating, user-initiated). */
   @media (prefers-reduced-motion: reduce) {
-    [data-reveal],
-    .landing-magnetic,
     .landing-float-chip {
-      transition: none !important;
-      transform: none !important;
       animation: none !important;
     }
   }
@@ -298,6 +299,93 @@
     --landing-cream: #FDFBF7;
     --landing-sand: #F5EFE4;
     --landing-ink: #1a1814;
+  }
+
+  .dark {
+    --landing-cream: #13110f;
+    --landing-sand: #1c1916;
+    --landing-ink: #f5f0e8;
+  }
+
+  /* Remap app semantic tokens inside landing so dark mode stays cohesive. */
+  .landing-grain {
+    --foreground: var(--landing-ink);
+    --background: var(--landing-cream);
+    --muted-foreground: color-mix(in oklab, var(--landing-ink) 58%, transparent);
+    --card: color-mix(in oklab, var(--landing-cream) 92%, var(--landing-ink));
+    --card-foreground: var(--landing-ink);
+    --border: color-mix(in oklab, var(--landing-ink) 12%, transparent);
+    --muted: color-mix(in oklab, var(--landing-ink) 8%, var(--landing-cream));
+    --input: color-mix(in oklab, var(--landing-ink) 10%, var(--landing-cream));
+    color: var(--landing-ink);
+    background: var(--landing-cream);
+  }
+
+  .landing-glass {
+    border-color: color-mix(in oklab, var(--landing-ink) 8%, transparent);
+    background-color: color-mix(in oklab, var(--landing-cream) 82%, white);
+  }
+
+  .dark .landing-glass {
+    background-color: color-mix(in oklab, var(--landing-ink) 7%, var(--landing-cream));
+  }
+
+  .landing-glass-heavy {
+    background-color: color-mix(in oklab, var(--landing-cream) 88%, white);
+  }
+
+  .dark .landing-glass-heavy {
+    background-color: color-mix(in oklab, var(--landing-ink) 10%, var(--landing-cream));
+  }
+
+  .landing-chip {
+    border-color: color-mix(in oklab, var(--landing-ink) 6%, transparent);
+    background-color: color-mix(in oklab, var(--landing-cream) 90%, white);
+    box-shadow:
+      0 24px 50px -28px color-mix(in oklab, var(--landing-ink) 45%, transparent),
+      inset 0 1px 0 color-mix(in oklab, var(--landing-ink) 6%, transparent);
+  }
+
+  .dark .landing-chip {
+    background-color: color-mix(in oklab, var(--landing-ink) 9%, var(--landing-cream));
+    box-shadow:
+      0 24px 50px -28px rgba(0, 0, 0, 0.45),
+      inset 0 1px 0 color-mix(in oklab, var(--landing-ink) 12%, transparent);
+  }
+
+  .landing-btn-secondary {
+    border-color: color-mix(in oklab, var(--landing-ink) 12%, transparent);
+    background-color: color-mix(in oklab, var(--landing-cream) 50%, white);
+    color: var(--landing-ink);
+  }
+
+  .dark .landing-btn-secondary {
+    background-color: color-mix(in oklab, var(--landing-ink) 8%, var(--landing-cream));
+  }
+
+  .landing-btn-secondary:hover {
+    background-color: color-mix(in oklab, var(--landing-cream) 70%, white);
+  }
+
+  .dark .landing-btn-secondary:hover {
+    background-color: color-mix(in oklab, var(--landing-ink) 12%, var(--landing-cream));
+  }
+
+  .landing-panel {
+    background-color: color-mix(in oklab, var(--landing-cream) 94%, white);
+    border-color: color-mix(in oklab, var(--landing-ink) 10%, transparent);
+  }
+
+  .dark .landing-panel {
+    background-color: color-mix(in oklab, var(--landing-ink) 6%, var(--landing-cream));
+  }
+
+  .landing-stat-highlight {
+    background-color: color-mix(in oklab, var(--landing-cream) 70%, white);
+  }
+
+  .dark .landing-stat-highlight {
+    background-color: color-mix(in oklab, var(--landing-ink) 5%, var(--landing-cream));
   }
 
   @keyframes landing-float {
@@ -364,5 +452,42 @@
     pointer-events: none;
     opacity: 0.03;
     background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  }
+
+  /* Thin top loading bar for background refetch (NProgress-style). */
+  .shimmer-bar {
+    position: relative;
+    overflow: hidden;
+    height: 2px;
+    border-radius: 9999px;
+    background: color-mix(in oklab, var(--muted-foreground) 15%, transparent);
+  }
+
+  .shimmer-bar::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    transform: translateX(-100%);
+    background: linear-gradient(
+      90deg,
+      transparent,
+      color-mix(in oklab, var(--primary) 50%, transparent),
+      transparent
+    );
+    animation: shimmer-slide 1.2s ease-in-out infinite;
+  }
+
+  @keyframes shimmer-slide {
+    100% {
+      transform: translateX(100%);
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .shimmer-bar::after {
+      animation: none;
+      transform: translateX(0);
+      opacity: 0.5;
+    }
   }
 }

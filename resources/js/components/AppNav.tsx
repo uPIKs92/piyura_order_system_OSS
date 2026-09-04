@@ -160,12 +160,12 @@ export function DesktopSidebar() {
                     <div className="flex min-w-0 flex-1 items-center gap-3">
                         <Avatar className="size-10 rounded-lg">
                             {tenantLogoUrl ? (
-                                <AvatarImage src={tenantLogoUrl} alt={tenant.name} />
+                                <AvatarImage src={tenantLogoUrl} alt={tenant?.name} />
                             ) : null}
                             <AvatarFallback className="rounded-lg">{tenantInitial}</AvatarFallback>
                         </Avatar>
                         <div className="min-w-0">
-                            <p className="truncate text-sm font-semibold">{tenant?.name ?? 'Order Tracker'}</p>
+                            <p className="truncate text-sm font-semibold">{tenant?.name ?? 'Simple Order Systems'}</p>
                             <p className="truncate text-xs text-muted-foreground">{user?.name}</p>
                         </div>
                     </div>

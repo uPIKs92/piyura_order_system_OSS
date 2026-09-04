@@ -1,4 +1,4 @@
-import { Bar, BarChart, CartesianGrid, XAxis, YAxis } from 'recharts';
+import { Bar, CartesianGrid, ComposedChart, Line, XAxis, YAxis } from 'recharts';
 import {
     ChartContainer,
     ChartLegend,
@@ -22,6 +22,10 @@ const chartConfig = {
     net_profit: {
         label: 'Net Profit',
         color: 'var(--chart-3)',
+    },
+    laba_bersih: {
+        label: 'Laba Bersih',
+        color: 'var(--chart-4)',
     },
 } satisfies ChartConfig;
 
@@ -53,7 +57,7 @@ export function ProfitTrendChart({ items }: { items: DailyTrendPoint[] }) {
     return (
         <div className="relative isolate w-full overflow-hidden">
             <ChartContainer config={chartConfig} className="h-64 w-full max-h-64 min-h-64">
-                <BarChart
+                <ComposedChart
                     data={data}
                     margin={{ left: 4, right: 8, top: 8, bottom: 4 }}
                     barGap={4}
@@ -96,7 +100,14 @@ export function ProfitTrendChart({ items }: { items: DailyTrendPoint[] }) {
                 <Bar dataKey="sales_turnover" fill="var(--color-sales_turnover)" radius={4} />
                 <Bar dataKey="purchasing_cost" fill="var(--color-purchasing_cost)" radius={4} />
                 <Bar dataKey="net_profit" fill="var(--color-net_profit)" radius={4} />
-            </BarChart>
+                <Line
+                    dataKey="laba_bersih"
+                    type="monotone"
+                    stroke="var(--color-laba_bersih)"
+                    strokeWidth={2}
+                    dot={false}
+                />
+            </ComposedChart>
         </ChartContainer>
         </div>
     );

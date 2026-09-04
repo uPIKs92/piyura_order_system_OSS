@@ -1,6 +1,7 @@
 import { lazy, Suspense } from 'react';
 import { Navigate, Route, Routes } from 'react-router-dom';
 import { AppShell } from '@/components/AppShell';
+import { OfflineFallback } from '@/components/OfflineFallback';
 import { PageFallback } from '@/components/PageFallback';
 import { useApi } from '@/lib/ApiProvider';
 
@@ -13,17 +14,23 @@ const SettingsLayout = lazy(() => import('@/pages/settings/SettingsLayout'));
 const SettingsProfile = lazy(() => import('@/pages/settings/SettingsProfile'));
 const SettingsAppearance = lazy(() => import('@/pages/settings/SettingsAppearance'));
 const SettingsOps = lazy(() => import('@/pages/settings/SettingsOps'));
+const SettingsPayment = lazy(() => import('@/pages/settings/SettingsPayment'));
 
 function ProtectedRoute({ children, roles }: { children: React.ReactNode; roles?: string[] }) {
-    const { user, loading } = useApi();
+    const { user, loading, offline } = useApi();
     if (loading) return <PageFallback />;
-    if (!user) return <Navigate to="/login" replace />;
+    if (!user) {
+        // Session probe failed offline (user never loaded): offer a retry
+        // instead of redirecting to /login, which would strand the user.
+        if (offline) return <OfflineFallback />;
+        return <Navigate to="/login" replace />;
+    }
     if (roles && !roles.includes(user.role)) return <Navigate to="/orders" replace />;
     return <>{children}</>;
 }
 
 export default function App() {
-    const { user, loading } = useApi();
+    const { user, loading, offline } = useApi();
 
     return (
         <Suspense fallback={<PageFallback />}>
@@ -39,6 +46,8 @@ export default function App() {
                             <PageFallback />
                         ) : user ? (
                             <Navigate to="/orders" replace />
+                        ) : offline ? (
+                            <OfflineFallback />
                         ) : (
                             <Navigate to="/login" replace />
                         )
@@ -57,6 +66,7 @@ export default function App() {
                         <Route index element={<SettingsProfile />} />
                         <Route path="appearance" element={<SettingsAppearance />} />
                         <Route path="ops" element={<SettingsOps />} />
+                        <Route path="payment" element={<SettingsPayment />} />
                     </Route>
                     <Route path="/reports/ops" element={<Navigate to="/settings/ops" replace />} />
                     <Route path="/products" element={<Navigate to="/catalog?tab=produk" replace />} />

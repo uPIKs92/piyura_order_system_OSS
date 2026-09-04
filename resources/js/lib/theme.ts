@@ -7,24 +7,12 @@ export const ACCENT_STORAGE_KEY = 'order-tracker-accent';
 
 const PALETTE_FONT_LINK_ID = 'palette-google-fonts';
 
-const NON_GOOGLE_FONTS = new Set([
-    'SFMono-Regular',
-    'Segoe UI',
-    'Apple Color Emoji',
-    'Cambria',
-    'Times New Roman',
-    'Georgia',
-]);
-
-function buildGoogleFontsHref(families: string[]): string | null {
-    const googleFamilies = families.filter((family) => !NON_GOOGLE_FONTS.has(family));
-    if (googleFamilies.length === 0) {
+function buildGoogleFontsHref(queries: string[]): string | null {
+    if (queries.length === 0) {
         return null;
     }
 
-    const familyParams = googleFamilies
-        .map((family) => `family=${encodeURIComponent(family)}:wght@300;400;500;600;700`)
-        .join('&');
+    const familyParams = queries.map((query) => `family=${query}`).join('&');
 
     return `https://fonts.googleapis.com/css2?${familyParams}&display=swap`;
 }
@@ -53,16 +41,18 @@ function applyPaletteFonts(color: PaletteColor): void {
 export type BasicPaletteColor = 'neutral' | 'blue' | 'green' | 'orange' | 'violet';
 
 export type PresetPaletteColor =
-    | 'claude-plus'
-    | 'light-green'
-    | 'zen-inspired-theme'
-    | 'astrovista'
-    | 'tiesen'
-    | 'designbyte'
-    | 'qrafthive'
-    | 'mx-brutalist'
-    | 'sage-green'
-    | 'apple-liquid-glass';
+    | 'luma-lime'
+    | 'sera-taupe'
+    | 'lyra-zinc'
+    | 'vega-emerald'
+    | 'luma-teal'
+    | 'luma-neutral'
+    | 'nova-mauve'
+    | 'sera-amber'
+    | 'luma-yellow'
+    | 'vega-sky'
+    | 'nova-violet'
+    | 'luma-red';
 
 export type PaletteColor = BasicPaletteColor | PresetPaletteColor;
 
@@ -116,76 +106,90 @@ export const basicPaletteOptions: PaletteOption[] = [
     },
 ];
 
-/** Popular all-time community themes from tweakcn.com/community */
+/** Popular all-time community themes from shadcnpreset.com/community */
 export const presetPaletteOptions: PaletteOption[] = [
     {
-        value: 'claude-plus',
-        label: 'Claude +',
-        preview: 'oklch(0.6171 0.1375 39.0427)',
-        surface: 'oklch(0.9818 0.0054 95.0986)',
+        value: 'luma-lime',
+        label: 'Luma Lime',
+        preview: 'oklch(0.841 0.238 128.85)',
+        surface: 'oklch(1 0 0)',
         group: 'preset',
     },
     {
-        value: 'light-green',
-        label: 'Light Green',
-        preview: 'oklch(0.8871 0.2122 128.5041)',
-        surface: 'oklch(0.9892 0.0054 117.9205)',
+        value: 'sera-taupe',
+        label: 'Sera Taupe',
+        preview: 'oklch(0.214 0.009 43.1)',
+        surface: 'oklch(1 0 0)',
         group: 'preset',
     },
     {
-        value: 'zen-inspired-theme',
-        label: 'Zen Inspired',
-        preview: 'oklch(0.3012 0 0)',
-        surface: 'oklch(0.9195 0.0169 88.0030)',
+        value: 'lyra-zinc',
+        label: 'Lyra Zinc',
+        preview: 'oklch(0.21 0.006 285.885)',
+        surface: 'oklch(1 0 0)',
         group: 'preset',
     },
     {
-        value: 'astrovista',
-        label: 'AstroVista',
-        preview: 'oklch(0.6420 0.1691 38.5815)',
-        surface: 'oklch(0.9383 0.0042 236.4993)',
+        value: 'vega-emerald',
+        label: 'Vega Emerald',
+        preview: 'oklch(0.508 0.118 165.612)',
+        surface: 'oklch(1 0 0)',
         group: 'preset',
     },
     {
-        value: 'tiesen',
-        label: 'Tiesen',
-        preview: 'oklch(0.5144 0.1605 267.4400)',
-        surface: 'oklch(0.9851 0 0)',
+        value: 'luma-teal',
+        label: 'Luma Teal',
+        preview: 'oklch(0.511 0.096 186.391)',
+        surface: 'oklch(1 0 0)',
         group: 'preset',
     },
     {
-        value: 'designbyte',
-        label: 'Designbyte',
-        preview: 'oklch(0.8545 0.1675 159.6564)',
-        surface: 'oklch(0.9940 0 0)',
+        value: 'luma-neutral',
+        label: 'Luma Neutral',
+        preview: 'oklch(0.205 0 0)',
+        surface: 'oklch(1 0 0)',
         group: 'preset',
     },
     {
-        value: 'qrafthive',
-        label: 'Qrafthive',
-        preview: 'oklch(0.6716 0.1368 48.5130)',
-        surface: 'oklch(1.0000 0 0)',
+        value: 'nova-mauve',
+        label: 'Nova Mauve',
+        preview: 'oklch(0.212 0.019 322.12)',
+        surface: 'oklch(1 0 0)',
         group: 'preset',
     },
     {
-        value: 'mx-brutalist',
-        label: 'MX-Brutalist',
-        preview: 'oklch(0.5687 0.1498 151.9380)',
-        surface: 'oklch(0.9923 0.0104 91.4994)',
+        value: 'sera-amber',
+        label: 'Sera Amber',
+        preview: 'oklch(0.555 0.163 48.998)',
+        surface: 'oklch(1 0 0)',
         group: 'preset',
     },
     {
-        value: 'sage-green',
-        label: 'Sage Green',
-        preview: 'oklch(0.7830 0.0384 132.7370)',
-        surface: 'oklch(0.9940 0 0)',
+        value: 'luma-yellow',
+        label: 'Luma Yellow',
+        preview: 'oklch(0.852 0.199 91.936)',
+        surface: 'oklch(1 0 0)',
         group: 'preset',
     },
     {
-        value: 'apple-liquid-glass',
-        label: 'Apple Liquid Glass',
-        preview: 'oklch(0.6007 0.1903 257.9419)',
-        surface: 'oklch(0.9700 0.0029 264.5420)',
+        value: 'vega-sky',
+        label: 'Vega Sky',
+        preview: 'oklch(0.5 0.134 242.749)',
+        surface: 'oklch(1 0 0)',
+        group: 'preset',
+    },
+    {
+        value: 'nova-violet',
+        label: 'Nova Violet',
+        preview: 'oklch(0.491 0.27 292.581)',
+        surface: 'oklch(1 0 0)',
+        group: 'preset',
+    },
+    {
+        value: 'luma-red',
+        label: 'Luma Red',
+        preview: 'oklch(0.505 0.213 27.518)',
+        surface: 'oklch(1 0 0)',
         group: 'preset',
     },
 ];
@@ -194,8 +198,8 @@ export const paletteOptions: PaletteOption[] = [...basicPaletteOptions, ...prese
 
 const paletteValues = new Set<string>(paletteOptions.map((option) => option.value));
 
-export function isPaletteColor(value: string | null): value is PaletteColor {
-    return value !== null && paletteValues.has(value);
+export function isPaletteColor(value: string | null | undefined): value is PaletteColor {
+    return value !== null && value !== undefined && paletteValues.has(value);
 }
 
 export function readStoredPalette(): PaletteColor {
@@ -229,8 +233,8 @@ export function applyTenantAppearance(
     tenant: { theme_mode?: string | null; theme_palette?: string | null },
     setTheme?: (theme: string) => void,
 ): void {
-    const mode = isThemeMode(tenant.theme_mode ?? null) ? tenant.theme_mode! : 'system';
-    const palette = isPaletteColor(tenant.theme_palette ?? null) ? tenant.theme_palette! : 'neutral';
+    const mode = isThemeMode(tenant.theme_mode) ? tenant.theme_mode : 'system';
+    const palette = isPaletteColor(tenant.theme_palette) ? tenant.theme_palette : 'neutral';
 
     if (setTheme) {
         setTheme(mode);

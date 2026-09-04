@@ -9,13 +9,13 @@ const PAGES = [
         path: '/orders',
         name: 'orders',
         primarySelector: 'main .app-frame input[placeholder*="Cari"]',
-        surfaceSelector: 'main .app-frame .overflow-hidden.rounded-2xl.border.bg-card',
+        surfaceSelector: 'main .app-frame .overflow-clip.rounded-2xl.border.bg-card',
     },
     {
         path: '/catalog',
         name: 'catalog',
         primarySelector: 'main .app-frame [data-slot="tabs-list"]',
-        surfaceSelector: 'main .app-frame .overflow-hidden.rounded-2xl.border.bg-card',
+        surfaceSelector: 'main .app-frame .overflow-clip.rounded-2xl.border.bg-card',
     },
     {
         path: '/reports',
@@ -26,8 +26,8 @@ const PAGES = [
     {
         path: '/users',
         name: 'users',
-        primarySelector: 'main .app-frame .overflow-hidden.rounded-2xl.border.bg-card',
-        surfaceSelector: 'main .app-frame .overflow-hidden.rounded-2xl.border.bg-card',
+        primarySelector: 'main .app-frame .overflow-clip.rounded-2xl.border.bg-card',
+        surfaceSelector: 'main .app-frame .overflow-clip.rounded-2xl.border.bg-card',
     },
     {
         path: '/settings',

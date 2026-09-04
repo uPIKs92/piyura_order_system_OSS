@@ -39,12 +39,19 @@ export default defineConfig({
         },
     },
     build: {
+        // maplibre-gl (~1 MB min) is intentionally a lazy on-demand chunk
+        // (dynamic import in LocationPickerPanel), so it may exceed the
+        // default 500 kB warning limit without hurting initial page load.
+        chunkSizeWarningLimit: 1100,
         rolldownOptions: {
             output: {
                 codeSplitting: true,
                 manualChunks(id) {
                     if (!id.includes('node_modules')) {
                         return;
+                    }
+                    if (id.includes('maplibre-gl')) {
+                        return 'vendor-maplibre';
                     }
                     if (id.includes('react-dom') || id.includes('/react/')) {
                         return 'vendor-react';

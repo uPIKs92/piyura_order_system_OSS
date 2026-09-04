@@ -10,6 +10,15 @@ interface IosListRowProps {
     showChevron?: boolean;
     className?: string;
     children?: React.ReactNode;
+    onPointerDown?: React.PointerEventHandler<HTMLElement>;
+    onPointerMove?: React.PointerEventHandler<HTMLElement>;
+    onPointerUp?: React.PointerEventHandler<HTMLElement>;
+    onPointerLeave?: React.PointerEventHandler<HTMLElement>;
+    onPointerCancel?: React.PointerEventHandler<HTMLElement>;
+    onContextMenu?: React.MouseEventHandler<HTMLElement>;
+    onTouchStart?: React.TouchEventHandler<HTMLElement>;
+    onTouchMove?: React.TouchEventHandler<HTMLElement>;
+    onTouchEnd?: React.TouchEventHandler<HTMLElement>;
 }
 
 export function IosListRow({
@@ -21,6 +30,15 @@ export function IosListRow({
     showChevron = false,
     className,
     children,
+    onPointerDown,
+    onPointerMove,
+    onPointerUp,
+    onPointerLeave,
+    onPointerCancel,
+    onContextMenu,
+    onTouchStart,
+    onTouchMove,
+    onTouchEnd,
 }: IosListRowProps) {
     const Comp = onClick ? 'button' : 'div';
 
@@ -33,6 +51,16 @@ export function IosListRow({
                 onClick && 'active:bg-muted/60',
                 className,
             )}
+            style={{ touchAction: 'pan-y' }}
+            onPointerDown={onPointerDown}
+            onPointerMove={onPointerMove}
+            onPointerUp={onPointerUp}
+            onPointerLeave={onPointerLeave}
+            onPointerCancel={onPointerCancel}
+            onContextMenu={onContextMenu}
+            onTouchStart={onTouchStart}
+            onTouchMove={onTouchMove}
+            onTouchEnd={onTouchEnd}
         >
             <div className="flex min-w-0 flex-1 flex-col gap-1">
                 {prefix ? <div className="flex items-center gap-1">{prefix}</div> : null}

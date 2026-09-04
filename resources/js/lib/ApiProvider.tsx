@@ -17,6 +17,7 @@ interface ApiContextValue {
     user: User | null;
     tenant: TenantBranding | null;
     loading: boolean;
+    offline: boolean;
     refreshUser: () => Promise<void>;
     refreshTenant: () => Promise<void>;
     logout: () => Promise<void>;
@@ -24,10 +25,19 @@ interface ApiContextValue {
 
 const ApiContext = createContext<ApiContextValue | null>(null);
 
+/**
+ * fetch() rejects with a TypeError when the request never completes (offline,
+ * DNS failure, connection refused) — distinct from HTTP error statuses.
+ */
+function isNetworkError(err: unknown): boolean {
+    return err instanceof TypeError;
+}
+
 export function ApiProvider({ children }: { children: ReactNode }) {
     const [user, setUser] = useState<User | null>(null);
     const [tenant, setTenant] = useState<TenantBranding | null>(null);
     const [loading, setLoading] = useState(true);
+    const [offline, setOffline] = useState(false);
     const navigate = useNavigate();
 
     const handleSessionExpired = useCallback(() => {
@@ -47,7 +57,15 @@ export function ApiProvider({ children }: { children: ReactNode }) {
             const data = await api.getCurrentUser();
             setUser(data.user);
             setTenant(data.tenant);
+            setOffline(false);
         } catch (err) {
+            if (isNetworkError(err)) {
+                // Network unreachable: keep the loaded session instead of
+                // kicking the user to /login; flag offline so routes can show
+                // a retryable state. A real 401 still clears the session.
+                setOffline(true);
+                return;
+            }
             setUser(null);
             setTenant(null);
             if (err instanceof Error && err.message === 'UNAUTHENTICATED') {
@@ -91,8 +109,8 @@ export function ApiProvider({ children }: { children: ReactNode }) {
     }, [navigate]);
 
     const value = useMemo(
-        () => ({ api, user, tenant, loading, refreshUser, refreshTenant, logout }),
-        [user, tenant, loading, refreshUser, refreshTenant, logout]
+        () => ({ api, user, tenant, loading, offline, refreshUser, refreshTenant, logout }),
+        [user, tenant, loading, offline, refreshUser, refreshTenant, logout]
     );
 
     return <ApiContext.Provider value={value}>{children}</ApiContext.Provider>;

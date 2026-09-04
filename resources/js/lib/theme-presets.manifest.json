@@ -1,12 +1,14 @@
 [
-  { "slug": "claude-plus", "id": "cmdght103000n04lh3e2ae93r", "label": "Claude +" },
-  { "slug": "light-green", "id": "cmlhfpjhw000004l4f4ax3m7z", "label": "Light Green" },
-  { "slug": "zen-inspired-theme", "id": "cmlm03etv000204lh15608kec", "label": "Zen Inspired" },
-  { "slug": "astrovista", "id": "cmlk6zefr000004lbe9jygsqc", "label": "AstroVista" },
-  { "slug": "tiesen", "id": "cmie97f2b000704l27r9g1p11", "label": "Tiesen" },
-  { "slug": "designbyte", "id": "cmcup07dt000104l4hj4eferh", "label": "Designbyte" },
-  { "slug": "qrafthive", "id": "cmjgilzlg000404ju2wgs7uj9", "label": "Qrafthive" },
-  { "slug": "mx-brutalist", "id": "cmllfu8oc000004l1a0tidj2g", "label": "MX-Brutalist" },
-  { "slug": "sage-green", "id": "cmlf6yp47000104ld4ijt51m7", "label": "Sage Green" },
-  { "slug": "apple-liquid-glass", "id": "cmr2flrsp000304ih46yj4y1b", "label": "Apple Liquid Glass" }
+  { "slug": "luma-lime", "code": "b4YtS7GakV", "label": "Luma Lime", "votes": 6 },
+  { "slug": "sera-taupe", "code": "b4xFeBLg4O", "label": "Sera Taupe", "votes": 6 },
+  { "slug": "lyra-zinc", "code": "b1t3qhVEW", "label": "Lyra Zinc", "votes": 3 },
+  { "slug": "vega-emerald", "code": "b3bEx3aBk2", "label": "Vega Emerald", "votes": 3 },
+  { "slug": "luma-teal", "code": "b5dyaqxe6", "label": "Luma Teal", "votes": 3 },
+  { "slug": "luma-neutral", "code": "b1VlItwW", "label": "Luma Neutral", "votes": 2 },
+  { "slug": "nova-mauve", "code": "b4N1arr72", "label": "Nova Mauve", "votes": 2 },
+  { "slug": "sera-amber", "code": "b4ukmlFqSm", "label": "Sera Amber", "votes": 2 },
+  { "slug": "luma-yellow", "code": "b5Kbqn6Fm", "label": "Luma Yellow", "votes": 2 },
+  { "slug": "vega-sky", "code": "b6C24NuyWg", "label": "Vega Sky", "votes": 2 },
+  { "slug": "nova-violet", "code": "b6F9PRDpZ", "label": "Nova Violet", "votes": 2 },
+  { "slug": "luma-red", "code": "b6FArvVnDX", "label": "Luma Red", "votes": 2 }
 ]

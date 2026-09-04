@@ -11,6 +11,14 @@
     @endphp
     <link rel="icon" href="{{ asset('favicon.ico') }}?v={{ $faviconV }}" type="image/x-icon" sizes="any">
     <link rel="shortcut icon" href="{{ asset('favicon.ico') }}?v={{ $faviconV }}" type="image/x-icon">
+    <link rel="manifest" href="{{ asset('manifest.json') }}">
+    <link rel="apple-touch-icon" href="{{ asset('icons/apple-touch-icon.png') }}">
+    <meta name="theme-color" content="#212121">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="{{ config('branding.app_name') }}">
+    @include('partials._apple-splash')
     @php
         $loginTenant = \App\Support\LoginTenant::resolve();
     @endphp
@@ -21,8 +29,8 @@
             'app_name' => config('branding.app_name'),
             'platform_name' => config('branding.platform_name'),
             'show_platform_credit_on_invoice' => config('branding.show_platform_credit_on_invoice'),
-        ]) !!};
-        window.__TENANT_BRANDING__ = {!! json_encode($loginTenant?->toLoginBrandingArray()) !!};
+        ], JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_AMP | JSON_HEX_QUOT) !!};
+        window.__TENANT_BRANDING__ = {!! json_encode($loginTenant?->toLoginBrandingArray(), JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_AMP | JSON_HEX_QUOT) !!};
     </script>
     <script nonce="{{ $cspNonce }}">
         (function () {
@@ -39,12 +47,10 @@
                 if (palette && palette !== 'neutral') {
                     document.documentElement.setAttribute('data-palette', palette);
                     var presetFonts = @json(json_decode(file_get_contents(resource_path('js/lib/theme-preset-fonts.json')), true));
-                    var skipFonts = { 'SFMono-Regular': 1, 'Segoe UI': 1 };
-                    var families = presetFonts[palette] || [];
-                    var googleFamilies = families.filter(function (f) { return !skipFonts[f]; });
-                    if (googleFamilies.length) {
-                        var params = googleFamilies.map(function (f) {
-                            return 'family=' + encodeURIComponent(f) + ':wght@300;400;500;600;700';
+                    var queries = presetFonts[palette] || [];
+                    if (queries.length) {
+                        var params = queries.map(function (q) {
+                            return 'family=' + q;
                         }).join('&');
                         var link = document.createElement('link');
                         link.id = 'palette-google-fonts';
@@ -54,6 +60,14 @@
                     }
                 }
             } catch (e) {}
+        })();
+    </script>
+    <script nonce="{{ $cspNonce }}">
+        (function () {
+            if (!('serviceWorker' in navigator)) return;
+            window.addEventListener('load', function () {
+                navigator.serviceWorker.register('{{ asset('sw.js') }}').catch(function () {});
+            });
         })();
     </script>
     @vite(['resources/css/app.css', 'resources/js/main.tsx'])

@@ -29,7 +29,7 @@ const tabsListVariants = cva(
         default:
           "inline-flex w-fit rounded-full bg-muted group-data-horizontal/tabs:h-9",
         segment:
-          "flex h-auto w-full gap-2 rounded-2xl bg-muted group-data-horizontal/tabs:h-auto",
+          "flex h-auto w-full flex-wrap gap-2 rounded-2xl bg-muted group-data-horizontal/tabs:h-auto",
         line: "inline-flex w-fit gap-1 bg-transparent",
       },
     },

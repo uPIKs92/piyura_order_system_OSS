@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from 'react';
 import { toast } from 'sonner';
 import { Monitor, Moon, Sun } from 'lucide-react';
 import { useTheme } from 'next-themes';
+import { CollapsibleCard } from '@/components/CollapsibleCard';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Field, FieldDescription, FieldGroup, FieldLabel } from '@/components/ui/field';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -127,70 +128,65 @@ export function ThemeSettings() {
         : 'system';
 
     return (
-        <Card>
-            <CardHeader>
-                <CardTitle>Preferensi Tampilan</CardTitle>
-                <CardDescription>
-                    Berlaku untuk semua pengguna bisnis ini — latar, kartu, tombol, navigasi, dan grafik.
-                </CardDescription>
-            </CardHeader>
-            <CardContent>
-                <FieldGroup>
-                    <Field>
-                        <FieldLabel>Mode tampilan</FieldLabel>
-                        <FieldDescription>Pilih tampilan terang, gelap, atau ikuti pengaturan perangkat.</FieldDescription>
-                        <ToggleGroup
-                            value={[activeTheme]}
-                            onValueChange={(values) => {
-                                const next = values[0];
-                                if (!next || !isThemeMode(next) || saving) return;
-                                void saveAppearance(next, palette);
-                            }}
-                            variant="outline"
-                            spacing={0}
-                            className="w-full"
-                            disabled={saving}
-                        >
-                            {themeModes.map((mode) => {
-                                const Icon = mode.icon;
-                                return (
-                                    <ToggleGroupItem
-                                        key={mode.value}
-                                        value={mode.value}
-                                        aria-label={mode.label}
-                                        className="flex-1"
-                                    >
-                                        <Icon data-icon="inline-start" />
-                                        {mode.label}
-                                    </ToggleGroupItem>
-                                );
-                            })}
-                        </ToggleGroup>
-                    </Field>
+        <CollapsibleCard
+            title="Preferensi Tampilan"
+            description="Berlaku untuk semua pengguna bisnis ini — latar, kartu, tombol, navigasi, dan grafik."
+        >
+            <FieldGroup>
+                <Field>
+                    <FieldLabel>Mode tampilan</FieldLabel>
+                    <FieldDescription>Pilih tampilan terang, gelap, atau ikuti pengaturan perangkat.</FieldDescription>
+                    <ToggleGroup
+                        value={[activeTheme]}
+                        onValueChange={(values) => {
+                            const next = values[0];
+                            if (!next || !isThemeMode(next) || saving) return;
+                            void saveAppearance(next, palette);
+                        }}
+                        variant="outline"
+                        spacing={0}
+                        className="w-full"
+                        disabled={saving}
+                    >
+                        {themeModes.map((mode) => {
+                            const Icon = mode.icon;
+                            return (
+                                <ToggleGroupItem
+                                    key={mode.value}
+                                    value={mode.value}
+                                    aria-label={mode.label}
+                                    className="flex-1"
+                                >
+                                    <Icon data-icon="inline-start" />
+                                    {mode.label}
+                                </ToggleGroupItem>
+                            );
+                        })}
+                    </ToggleGroup>
+                </Field>
 
-                    <Field>
-                        <FieldLabel>Warna dasar</FieldLabel>
-                        <FieldDescription>Palet sederhana untuk tampilan sehari-hari.</FieldDescription>
-                        <PalettePicker
-                            options={basicPaletteOptions}
-                            palette={palette}
-                            saving={saving}
-                            onSelect={(next) => void saveAppearance(activeTheme, next)}
-                        />
-                    </Field>
+                <Field>
+                    <FieldLabel>Warna dasar</FieldLabel>
+                    <FieldDescription>Palet sederhana untuk tampilan sehari-hari.</FieldDescription>
+                    <PalettePicker
+                        options={basicPaletteOptions}
+                        palette={palette}
+                        saving={saving}
+                        onSelect={(next) => void saveAppearance(activeTheme, next)}
+                    />
+                </Field>
 
-                    <Field>
-                        <FieldLabel>Populer sepanjang masa</FieldLabel>
-                        <FieldDescription>10 tema teratas dari komunitas tweakcn, diurutkan berdasarkan suka.</FieldDescription>
-                        <PalettePicker
-                            options={presetPaletteOptions}
-                            palette={palette}
-                            saving={saving}
-                            onSelect={(next) => void saveAppearance(activeTheme, next)}
-                        />
-                    </Field>
-                </FieldGroup>
-            </CardContent>
-        </Card>
+                <Field>
+                    <FieldLabel>Populer sepanjang masa</FieldLabel>
+                    <FieldDescription>12 tema teratas dari komunitas shadcnpreset, diurutkan berdasarkan suka.</FieldDescription>
+                    <PalettePicker
+                        options={presetPaletteOptions}
+                        palette={palette}
+                        saving={saving}
+                        onSelect={(next) => void saveAppearance(activeTheme, next)}
+                    />
+                </Field>
+            </FieldGroup>
+        </CollapsibleCard>
     );
 }

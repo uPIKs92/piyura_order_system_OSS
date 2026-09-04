@@ -29,5 +29,12 @@ export default defineConfig({
         viewport: { width: 1280, height: 800 },
       },
     },
+    {
+      name: 'swipe',
+      testMatch: '**/swipe.spec.js',
+      use: {
+        viewport: { width: 400, height: 800 },
+      },
+    },
   ],
 });

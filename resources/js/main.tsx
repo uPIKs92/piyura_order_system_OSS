@@ -3,6 +3,7 @@ import { BrowserRouter } from 'react-router-dom';
 import { ApiProvider } from '@/lib/ApiProvider';
 import { ThemeProvider } from '@/components/ThemeProvider';
 import { TenantThemeSync } from '@/components/TenantThemeSync';
+import { registerServiceWorkerUpdater } from '@/lib/sw-update';
 import App from '@/App';
 import '../css/app.css';
 
@@ -19,3 +20,5 @@ if (root) {
         </BrowserRouter>
     );
 }
+
+registerServiceWorkerUpdater();

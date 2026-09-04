@@ -1,24 +1,66 @@
 import { useEffect, useRef } from 'react';
-import { Navigate, Outlet, useLocation } from 'react-router-dom';
+import { Navigate, Outlet, useLocation, useNavigate } from 'react-router-dom';
 import { LogOut } from 'lucide-react';
+import { toast } from 'sonner';
 import { Toaster } from '@/components/ui/sonner';
 import { DesktopSidebar, MobileTabBar } from '@/components/AppNav';
 import { useApi } from '@/lib/ApiProvider';
+import { OfflineFallback } from '@/components/OfflineFallback';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { APP_FRAME_CLASS } from '@/lib/layout';
 import { safeLogoUrl } from '@/lib/branding';
 import { InventoryAlertButton } from '@/components/inventory/InventoryAlertButton';
+import { useInstallPrompt, isInstallDismissed } from '@/lib/useInstallPrompt';
 
 export function AppShell() {
-    const { user, tenant, loading, logout } = useApi();
+    const { user, tenant, loading, offline, logout } = useApi();
     const location = useLocation();
+    const navigate = useNavigate();
     const mainRef = useRef<HTMLElement>(null);
+    const { canInstall, promptInstall, platform, hasNativePrompt } = useInstallPrompt();
 
     useEffect(() => {
         mainRef.current?.scrollTo(0, 0);
     }, [location.pathname]);
+
+    // One-time install nudge after the user lands in the app.
+    useEffect(() => {
+        if (!canInstall) return;
+        if (isInstallDismissed()) return;
+        const seenKey = 'pwa-install-nudge-shown';
+        try {
+            if (sessionStorage.getItem(seenKey) === '1') return;
+            sessionStorage.setItem(seenKey, '1');
+        } catch {
+            return;
+        }
+        const t = toast.info('Pasang aplikasi', {
+            description: hasNativePrompt
+                ? 'Klik untuk memasang ke layar utama.'
+                : platform === 'ios'
+                    ? 'Buka Settings untuk panduan pasang di iPhone/iPad.'
+                    : 'Buka Settings untuk panduan pasang di Android.',
+            duration: 8000,
+            action: hasNativePrompt
+                ? {
+                      label: 'Pasang',
+                      onClick: () => {
+                          promptInstall();
+                      },
+                  }
+                : {
+                      label: 'Buka Settings',
+                      onClick: () => {
+                          navigate('/settings');
+                      },
+                  },
+        });
+        return () => {
+            toast.dismiss(t);
+        };
+    }, [canInstall, promptInstall, platform, hasNativePrompt, navigate]);
 
     if (loading) {
         return (
@@ -31,6 +73,7 @@ export function AppShell() {
     }
 
     if (!user) {
+        if (offline) return <OfflineFallback />;
         return <Navigate to="/login" replace />;
     }
 
@@ -47,7 +90,7 @@ export function AppShell() {
                         <div className="flex min-w-0 flex-1 items-center gap-2.5">
                             <Avatar className="size-9 rounded-lg">
                                 {tenantLogoUrl ? (
-                                    <AvatarImage src={tenantLogoUrl} alt={tenant.name} />
+                                    <AvatarImage src={tenantLogoUrl} alt={tenant?.name} />
                                 ) : null}
                                 <AvatarFallback className="rounded-lg">{tenantInitial}</AvatarFallback>
                             </Avatar>
@@ -78,7 +121,7 @@ export function AppShell() {
 
                 <main
                     ref={mainRef}
-                    className="w-full min-h-0 min-w-0 flex-1 overflow-x-hidden overflow-y-auto py-4 pb-28 lg:pb-8"
+                    className="w-full min-h-0 min-w-0 flex-1 overflow-x-clip overflow-y-auto py-4 pb-28 lg:pb-8 [overscroll-behavior:contain]"
                 >
                     <div className={APP_FRAME_CLASS}>
                         <Outlet />

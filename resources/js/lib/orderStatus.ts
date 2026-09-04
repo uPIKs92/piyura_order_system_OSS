@@ -61,6 +61,15 @@ export function isTerminal(status: string): boolean {
     return status === 'selesai' || status === 'cancelled';
 }
 
+/**
+ * Orders at diproses and beyond (dikirim, selesai) — and cancelled ones —
+ * are immutable transaction history: no editing, only status transitions
+ * and payments. Keep in sync with OrderService::update()'s lock guard.
+ */
+export function canEditOrder(status: string): boolean {
+    return status === 'draft' || status === 'pending';
+}
+
 export function getPipelineIndex(status: string): number {
     if (status === 'cancelled') {
         return -1;

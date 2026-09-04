@@ -1,13 +1,24 @@
 import type {
     AppBranding,
     AuthResponse,
+    MayarLinkResponse,
+    MayarTestResponse,
     PaletteColor,
+    PaymentSettings,
     TenantBranding,
     ThemeMode,
     User,
 } from '@/lib/types';
 
 const TENANT_CACHE_KEY = 'tenant_branding';
+
+/**
+ * Branding cache is scoped per host: one tenant per (sub)domain, so a cached
+ * entry must never leak into another host's login screen.
+ */
+function tenantCacheKey(): string {
+    return `${TENANT_CACHE_KEY}:${window.location.hostname}`;
+}
 
 function readCsrfToken(): string | null {
     const match = document.cookie.match(/(?:^|;\s*)XSRF-TOKEN=([^;]+)/);
@@ -20,6 +31,19 @@ async function ensureCsrfCookie(): Promise<void> {
         headers: { Accept: 'application/json' },
     });
 }
+
+/**
+ * Request options with a JSON-friendly body: `request()` JSON.stringifies
+ * plain objects, so callers may pass objects directly instead of pre-serializing.
+ */
+type RequestOptions = Omit<RequestInit, 'body'> & {
+    body?: BodyInit | object;
+};
+
+type TenantSettingsWithOrigin = TenantBranding & {
+    latitude?: number | null;
+    longitude?: number | null;
+};
 
 class ApiClient {
     private sessionKnown = false;
@@ -95,14 +119,18 @@ class ApiClient {
         return data as T;
     }
 
-    async request<T = unknown>(endpoint: string, options: RequestInit = {}): Promise<T> {
+    async request<T = unknown>(endpoint: string, options: RequestOptions = {}): Promise<T> {
         const url = '/api' + endpoint;
         const headers = await this.buildHeaders((options.headers as Record<string, string>) ?? {});
+        const { body, ...rest } = options;
         const config: RequestInit = {
             credentials: 'include',
             headers,
-            ...options,
+            ...rest,
         };
+        if (body !== undefined && body !== null) {
+            config.body = body as BodyInit;
+        }
 
         if (config.body && typeof config.body === 'object' && !(config.body instanceof FormData)) {
             config.body = JSON.stringify(config.body);
@@ -117,7 +145,8 @@ class ApiClient {
         const data = await response.json();
 
         if (!response.ok) {
-            let message = data.message || 'Request failed';
+            // Some endpoints (e.g. delivery estimate) reject with {reason}.
+            let message = data.message || data.reason || 'Request failed';
             if (data.errors) {
                 message = Object.values(data.errors as Record<string, string[]>).flat().join('\n');
             }
@@ -131,6 +160,11 @@ class ApiClient {
     clearSession(): void {
         this.sessionKnown = false;
         this.clearTenantCache();
+        // Drop cached API responses (orders etc.) so the next session on this
+        // device never serves the previous user's data from the SW cache.
+        if (typeof navigator !== 'undefined' && 'serviceWorker' in navigator) {
+            navigator.serviceWorker.controller?.postMessage({ type: 'CLEAR_API_CACHE' });
+        }
     }
 
     isAuthenticated(): boolean {
@@ -153,12 +187,12 @@ class ApiClient {
         return this.request<T>('/' + resource + '/' + id, { method: 'GET' });
     }
 
-    async create<T = unknown>(resource: string, data: unknown): Promise<T> {
-        return this.request<T>('/' + resource, { method: 'POST', body: data as BodyInit });
+    async create<T = unknown>(resource: string, data: object): Promise<T> {
+        return this.request<T>('/' + resource, { method: 'POST', body: data });
     }
 
-    async update<T = unknown>(resource: string, id: number | string, data: unknown): Promise<T> {
-        return this.request<T>('/' + resource + '/' + id, { method: 'PUT', body: data as BodyInit });
+    async update<T = unknown>(resource: string, id: number | string, data: object): Promise<T> {
+        return this.request<T>('/' + resource + '/' + id, { method: 'PUT', body: data });
     }
 
     async destroy<T = unknown>(resource: string, id: number | string, params?: Record<string, string>): Promise<T> {
@@ -216,8 +250,12 @@ class ApiClient {
 
     getCachedTenantBranding(): TenantBranding | null {
         try {
-            const raw = localStorage.getItem(TENANT_CACHE_KEY);
-            return raw ? (JSON.parse(raw) as TenantBranding) : null;
+            const raw = localStorage.getItem(tenantCacheKey());
+            if (raw) return JSON.parse(raw) as TenantBranding;
+            // Evict the pre-scoping key so a stale cross-tenant branding
+            // never resurfaces on hosts without server-injected branding.
+            localStorage.removeItem(TENANT_CACHE_KEY);
+            return null;
         } catch {
             return null;
         }
@@ -225,7 +263,7 @@ class ApiClient {
 
     cacheTenantBranding(tenant: TenantBranding): void {
         localStorage.setItem(
-            TENANT_CACHE_KEY,
+            tenantCacheKey(),
             JSON.stringify({
                 slug: tenant.slug,
                 name: tenant.name,
@@ -236,17 +274,20 @@ class ApiClient {
     }
 
     clearTenantCache(): void {
+        localStorage.removeItem(tenantCacheKey());
         localStorage.removeItem(TENANT_CACHE_KEY);
     }
 
-    async getTenantSettings(): Promise<TenantBranding> {
-        return this.request<TenantBranding>('/settings/tenant', { method: 'GET' });
+    async getTenantSettings(): Promise<TenantSettingsWithOrigin> {
+        return this.request<TenantSettingsWithOrigin>('/settings/tenant', { method: 'GET' });
     }
 
-    async updateTenantSettings(data: Partial<TenantBranding>): Promise<TenantBranding> {
-        const tenant = await this.request<TenantBranding>('/settings/tenant', {
+    async updateTenantSettings(
+        data: Partial<TenantBranding> & { latitude?: number | null; longitude?: number | null },
+    ): Promise<TenantSettingsWithOrigin> {
+        const tenant = await this.request<TenantSettingsWithOrigin>('/settings/tenant', {
             method: 'PATCH',
-            body: data as BodyInit,
+            body: data,
         });
         this.cacheTenantBranding(tenant);
         return tenant;
@@ -272,7 +313,7 @@ class ApiClient {
     }): Promise<TenantBranding> {
         const tenant = await this.request<TenantBranding>('/settings/tenant/appearance', {
             method: 'PATCH',
-            body: data as BodyInit,
+            body: data,
         });
         this.cacheTenantBranding(tenant);
         return tenant;
@@ -284,6 +325,35 @@ class ApiClient {
 
     async exportTenantData(): Promise<Record<string, unknown>> {
         return this.request<Record<string, unknown>>('/tenant/export', { method: 'GET' });
+    }
+
+    async getPaymentSettings(): Promise<PaymentSettings> {
+        return this.request<PaymentSettings>('/settings/payment', { method: 'GET' });
+    }
+
+    async updatePaymentSettings(data: Partial<PaymentSettings> & { mayar_api_key?: string }): Promise<PaymentSettings> {
+        return this.request<PaymentSettings>('/settings/payment', {
+            method: 'PATCH',
+            body: data,
+        });
+    }
+
+    async uploadQris(file: File): Promise<PaymentSettings> {
+        const formData = new FormData();
+        formData.append('qris', file);
+        return this.upload<PaymentSettings>('/settings/payment/qris', formData);
+    }
+
+    async deleteQris(): Promise<PaymentSettings> {
+        return this.request<PaymentSettings>('/settings/payment/qris', { method: 'DELETE' });
+    }
+
+    async testMayar(): Promise<MayarTestResponse> {
+        return this.request<MayarTestResponse>('/settings/mayar/test', { method: 'GET' });
+    }
+
+    async createMayarLink(orderId: number): Promise<MayarLinkResponse> {
+        return this.request<MayarLinkResponse>(`/orders/${orderId}/mayar/link`, { method: 'POST' });
     }
 }
 
