@@ -1,0 +1,106 @@
+{
+  "geist": {
+    "family": "\"Geist\", system-ui, sans-serif",
+    "googleFontQuery": "Geist:wght@100..900"
+  },
+  "inter": {
+    "family": "\"Inter\", system-ui, sans-serif",
+    "googleFontQuery": "Inter:wght@400;500;600;700"
+  },
+  "noto-sans": {
+    "family": "\"Noto Sans\", system-ui, sans-serif",
+    "googleFontQuery": "Noto+Sans:wght@400;500;600;700"
+  },
+  "nunito-sans": {
+    "family": "\"Nunito Sans\", system-ui, sans-serif",
+    "googleFontQuery": "Nunito+Sans:wght@400;500;600;700"
+  },
+  "figtree": {
+    "family": "\"Figtree\", system-ui, sans-serif",
+    "googleFontQuery": "Figtree:wght@400;500;600;700"
+  },
+  "roboto": {
+    "family": "\"Roboto\", system-ui, sans-serif",
+    "googleFontQuery": "Roboto:wght@400;500;700"
+  },
+  "raleway": {
+    "family": "\"Raleway\", system-ui, sans-serif",
+    "googleFontQuery": "Raleway:wght@400;500;600;700"
+  },
+  "dm-sans": {
+    "family": "\"DM Sans\", system-ui, sans-serif",
+    "googleFontQuery": "DM+Sans:wght@400;500;700"
+  },
+  "public-sans": {
+    "family": "\"Public Sans\", system-ui, sans-serif",
+    "googleFontQuery": "Public+Sans:wght@400;500;600;700"
+  },
+  "outfit": {
+    "family": "\"Outfit\", system-ui, sans-serif",
+    "googleFontQuery": "Outfit:wght@400;500;600;700"
+  },
+  "oxanium": {
+    "family": "\"Oxanium\", system-ui, sans-serif",
+    "googleFontQuery": "Oxanium:wght@400;500;600;700"
+  },
+  "manrope": {
+    "family": "\"Manrope\", system-ui, sans-serif",
+    "googleFontQuery": "Manrope:wght@400;500;600;700"
+  },
+  "space-grotesk": {
+    "family": "\"Space Grotesk\", system-ui, sans-serif",
+    "googleFontQuery": "Space+Grotesk:wght@400;500;600;700"
+  },
+  "montserrat": {
+    "family": "\"Montserrat\", system-ui, sans-serif",
+    "googleFontQuery": "Montserrat:wght@400;500;600;700"
+  },
+  "ibm-plex-sans": {
+    "family": "\"IBM Plex Sans\", system-ui, sans-serif",
+    "googleFontQuery": "IBM+Plex+Sans:wght@400;500;600;700"
+  },
+  "source-sans-3": {
+    "family": "\"Source Sans 3\", system-ui, sans-serif",
+    "googleFontQuery": "Source+Sans+3:wght@400;500;600;700"
+  },
+  "instrument-sans": {
+    "family": "\"Instrument Sans\", system-ui, sans-serif",
+    "googleFontQuery": "Instrument+Sans:wght@400;500;600;700"
+  },
+  "jetbrains-mono": {
+    "family": "\"JetBrains Mono\", monospace",
+    "googleFontQuery": "JetBrains+Mono:wght@400;500;700"
+  },
+  "geist-mono": {
+    "family": "\"Geist Mono\", monospace",
+    "googleFontQuery": "Geist+Mono:wght@100..900"
+  },
+  "noto-serif": {
+    "family": "\"Noto Serif\", serif",
+    "googleFontQuery": "Noto+Serif:wght@400;500;600;700"
+  },
+  "roboto-slab": {
+    "family": "\"Roboto Slab\", serif",
+    "googleFontQuery": "Roboto+Slab:wght@400;500;600;700"
+  },
+  "merriweather": {
+    "family": "\"Merriweather\", serif",
+    "googleFontQuery": "Merriweather:wght@400;700"
+  },
+  "lora": {
+    "family": "\"Lora\", serif",
+    "googleFontQuery": "Lora:wght@400;500;600;700"
+  },
+  "playfair-display": {
+    "family": "\"Playfair Display\", serif",
+    "googleFontQuery": "Playfair+Display:wght@400;500;600;700"
+  },
+  "eb-garamond": {
+    "family": "\"EB Garamond\", serif",
+    "googleFontQuery": "EB+Garamond:wght@400;500;600;700"
+  },
+  "instrument-serif": {
+    "family": "\"Instrument Serif\", serif",
+    "googleFontQuery": "Instrument+Serif:ital@0;1"
+  }
+}

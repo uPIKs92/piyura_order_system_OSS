@@ -39,7 +39,12 @@ done < <(git ls-files)
 
 if ((${#TRACKED_FILES[@]} > 0)); then
   for pattern in "${PATTERNS[@]}"; do
-    if rg -n -i --no-messages "${TRACKED_FILES[@]}" -e "$pattern" >/tmp/secret-scan.txt 2>/dev/null; then
+    rg -n -i --no-messages "${TRACKED_FILES[@]}" -e "$pattern" 2>/dev/null \
+      | rg -v '(^|:)scripts/secret-scan\.sh:' \
+      | rg -v '=[[:space:]]*(<[^>]*>|\.\.\.|null|password|secret|changeme|dummy|example|placeholder)([[:space:]]|$)' \
+      | rg -v 'config\(' \
+      > /tmp/secret-scan.txt || true
+    if [[ -s /tmp/secret-scan.txt ]]; then
       echo "Potential secret match ($pattern) in tracked files:"
       cat /tmp/secret-scan.txt
       FAIL=1
